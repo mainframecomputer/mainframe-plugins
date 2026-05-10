@@ -1,0 +1,66 @@
+{
+  "id": "mainframe",
+  "name": "Mainframe",
+  "displayName": "Mainframe",
+  "version": "0.1.0",
+  "description": "Create and share short Mainframe video updates from coding-agent work.",
+  "longDescription": "Mainframe adds a share-video skill, hosted MCP server wiring, and optional stop hooks that suggest a short video update after meaningful agent work when the user has been away.",
+  "developerName": "Mainframe",
+  "author": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "homepage": "https://mainframe.app",
+  "websiteURL": "https://mainframe.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mainframecomputer/mainframe-plugins.git"
+  },
+  "license": "UNLICENSED",
+  "category": "productivity",
+  "brandColor": "#20C7B7",
+  "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
+  "tags": ["video", "agent-work", "handoff", "mcp", "hooks"],
+  "capabilities": ["skills", "mcp", "hooks"],
+  "defaultPrompt": "Use Mainframe when completed agent work would be easier to review as a short narrated or visual video update.",
+  "icon": "assets/icon.png",
+  "logo": "assets/logo.png",
+  "screenshots": [
+    "assets/screenshots/cursor-mainframe.png",
+    "assets/screenshots/claude-mainframe.png",
+    "assets/screenshots/codex-mainframe.png",
+    "assets/screenshots/devin-terminal-mainframe.png",
+    "assets/screenshots/openclaw-mainframe.png"
+  ],
+  "privacyPolicyUrl": "https://mainframe.app/privacy",
+  "privacyPolicyURL": "https://mainframe.app/privacy",
+  "termsOfServiceUrl": "https://mainframe.app/terms",
+  "termsOfServiceURL": "https://mainframe.app/terms",
+  "skills": ["./skills"],
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "support": {
+    "mcp": {
+      "server": "mainframe",
+      "url": "https://mcp.mainframe.app/mcp"
+    },
+    "skill": {
+      "name": "share-video",
+      "slashCommand": "/mainframe:share-video",
+      "path": "skills/share-video/SKILL.md"
+    },
+    "environment": {
+      "MAINFRAME_HOOK": "Set to 0 to disable AFK stop-hook suggestions.",
+      "MAINFRAME_HOOK_AFK_HOURS": "Hours away before a stop hook suggests a video. Defaults to 1."
+    }
+  },
+  "host": "openclaw",
+  "entrypoint": "./dist/hooks/openclaw/register.js",
+  "sourceEntrypoint": "./hooks/openclaw/register.ts",
+  "callbacks": ["agent_turn_prepare", "before_agent_finalize"]
+}

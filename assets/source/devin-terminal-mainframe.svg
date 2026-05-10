@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <rect width="1440" height="900" fill="#0d0e12"/>
+  <rect x="80" y="76" width="1280" height="748" rx="22" fill="#151821" stroke="#353d4d" stroke-width="2"/>
+  <text x="140" y="158" fill="#f7f8fb" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="700">Mainframe for Devin Terminal</text>
+  <text x="140" y="218" fill="#aeb8ca" font-family="Inter, Arial, sans-serif" font-size="28">Claude-compatible Stop hook for terminal handoffs</text>
+  <rect x="140" y="300" width="1160" height="350" rx="16" fill="#0b0d10" stroke="#313a46"/>
+  <text x="184" y="370" fill="#92f7cf" font-family="SFMono-Regular, Menlo, monospace" font-size="28">$ MAINFRAME_HOOK_AFK_HOURS=1</text>
+  <text x="184" y="430" fill="#d8dee9" font-family="SFMono-Regular, Menlo, monospace" font-size="28">&gt; user away for 2.5 hours</text>
+  <text x="184" y="490" fill="#d8dee9" font-family="SFMono-Regular, Menlo, monospace" font-size="28">&gt; tool work detected</text>
+  <text x="184" y="550" fill="#f2d38a" font-family="SFMono-Regular, Menlo, monospace" font-size="28">suggest share-video before final stop</text>
+  <text x="140" y="726" fill="#7d899b" font-family="Inter, Arial, sans-serif" font-size="24">Set MAINFRAME_HOOK=0 to disable the hook.</text>
+</svg>

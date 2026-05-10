@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${MAINFRAME_PLUGIN_ROOT:-$PWD}/dist/hooks/devin-terminal/stop.js\""
+          }
+        ]
+      }
+    ]
+  }
+}

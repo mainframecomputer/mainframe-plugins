@@ -1,0 +1,3 @@
+{"timestamp":"2026-05-08T13:00:00.000Z","type":"user","message":{"role":"user","content":"Please implement this. SECRET_NEVER_LEAK"}}
+{"timestamp":"2026-05-08T13:12:00.000Z","type":"tool_use","name":"exec","input":{"cmd":"bun run lint"}}
+{"timestamp":"2026-05-08T14:00:00.000Z","type":"assistant","message":{"role":"assistant","content":"Lint passed."}}

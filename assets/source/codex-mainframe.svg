@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <rect width="1440" height="900" fill="#061116"/>
+  <rect x="96" y="92" width="1248" height="716" rx="18" fill="#0f1b20" stroke="#24414a" stroke-width="2"/>
+  <text x="156" y="174" fill="#eefcff" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="700">Mainframe for Codex</text>
+  <text x="156" y="232" fill="#98afba" font-family="Inter, Arial, sans-serif" font-size="28">Plugin manifest plus Codex Stop hook</text>
+  <rect x="156" y="300" width="520" height="308" rx="16" fill="#12242b" stroke="#2d6d7c"/>
+  <text x="196" y="366" fill="#d7fbff" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Generated Files</text>
+  <text x="196" y="426" fill="#a9c4ce" font-family="SFMono-Regular, Menlo, monospace" font-size="24">.codex-plugin/plugin.json</text>
+  <text x="196" y="476" fill="#a9c4ce" font-family="SFMono-Regular, Menlo, monospace" font-size="24">.agents/plugins/marketplace.json</text>
+  <text x="196" y="526" fill="#a9c4ce" font-family="SFMono-Regular, Menlo, monospace" font-size="24">hooks/codex/hooks.json</text>
+  <rect x="748" y="300" width="496" height="308" rx="16" fill="#16202d" stroke="#3f5f89"/>
+  <text x="788" y="366" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Stop Output</text>
+  <text x="788" y="426" fill="#bad7ff" font-family="SFMono-Regular, Menlo, monospace" font-size="24">decision: block</text>
+  <text x="788" y="476" fill="#bad7ff" font-family="SFMono-Regular, Menlo, monospace" font-size="24">reason: elapsed hours only</text>
+  <text x="156" y="704" fill="#7e96a0" font-family="Inter, Arial, sans-serif" font-size="24">No hookSpecificOutput field in Codex stop responses.</text>
+</svg>

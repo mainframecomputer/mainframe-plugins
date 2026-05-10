@@ -1,0 +1,27 @@
+{
+  "run": {
+    "prompt": "Please implement this.",
+    "messages": []
+  },
+  "finalize": {
+    "timestamp": "2026-05-08T15:30:00.000Z",
+    "events": [
+      {
+        "type": "tool_use",
+        "name": "bash"
+      }
+    ]
+  },
+  "alreadySharedFinalize": {
+    "timestamp": "2026-05-08T15:30:00.000Z",
+    "events": [
+      {
+        "type": "tool_use",
+        "name": "generate_video",
+        "output": {
+          "watchUrl": "https://mainframe.app/watch/abc"
+        }
+      }
+    ]
+  }
+}

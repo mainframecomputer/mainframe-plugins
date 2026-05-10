@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "strict": true,
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": ["hooks/**/*.ts", "tooling/**/*.ts", "vitest.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}

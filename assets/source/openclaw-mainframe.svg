@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <rect width="1440" height="900" fill="#0c1110"/>
+  <rect x="92" y="88" width="1256" height="724" rx="26" fill="#111a18" stroke="#2d453f" stroke-width="2"/>
+  <text x="152" y="170" fill="#f5fffc" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="700">Mainframe for OpenClaw</text>
+  <text x="152" y="230" fill="#9db7af" font-family="Inter, Arial, sans-serif" font-size="28">SDK callbacks without subprocess hooks</text>
+  <rect x="152" y="310" width="508" height="260" rx="18" fill="#13231f" stroke="#367564"/>
+  <text x="192" y="376" fill="#f7fffc" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700">agent_turn_prepare</text>
+  <text x="192" y="436" fill="#aee7d6" font-family="Inter, Arial, sans-serif" font-size="26">Capture user prompt time</text>
+  <rect x="780" y="310" width="508" height="260" rx="18" fill="#1d1e2b" stroke="#595f8b"/>
+  <text x="820" y="376" fill="#f7f8ff" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700">before_agent_finalize</text>
+  <text x="820" y="436" fill="#cbd0ff" font-family="Inter, Arial, sans-serif" font-size="26">Return action: revise</text>
+  <text x="152" y="686" fill="#829991" font-family="SFMono-Regular, Menlo, monospace" font-size="28">{ "action": "revise", "reason": "2.5 hours..." }</text>
+</svg>

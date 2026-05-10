@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "marketplace": "claude-code",
+  "owner": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "plugins": [
+    {
+      "name": "mainframe",
+      "displayName": "Mainframe",
+      "source": ".",
+      "version": "0.1.0",
+      "description": "Create and share short Mainframe video updates from coding-agent work.",
+      "longDescription": "Mainframe adds a share-video skill, hosted MCP server wiring, and optional stop hooks that suggest a short video update after meaningful agent work when the user has been away.",
+      "developerName": "Mainframe",
+      "author": {
+        "name": "Mainframe",
+        "email": "support@mainframe.app"
+      },
+      "homepage": "https://mainframe.app",
+      "websiteURL": "https://mainframe.app",
+      "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
+      "license": "UNLICENSED",
+      "category": "productivity",
+      "brandColor": "#20C7B7",
+      "tags": ["video", "agent-work", "handoff", "mcp", "hooks"],
+      "capabilities": ["skills", "mcp", "hooks"],
+      "defaultPrompt": "Use Mainframe when completed agent work would be easier to review as a short narrated or visual video update.",
+      "icon": "assets/icon.png",
+      "logo": "assets/logo.png",
+      "screenshots": [
+        "assets/screenshots/cursor-mainframe.png",
+        "assets/screenshots/claude-mainframe.png",
+        "assets/screenshots/codex-mainframe.png",
+        "assets/screenshots/devin-terminal-mainframe.png",
+        "assets/screenshots/openclaw-mainframe.png"
+      ],
+      "privacyPolicyUrl": "https://mainframe.app/privacy",
+      "privacyPolicyURL": "https://mainframe.app/privacy",
+      "termsOfServiceUrl": "https://mainframe.app/terms",
+      "termsOfServiceURL": "https://mainframe.app/terms"
+    }
+  ]
+}

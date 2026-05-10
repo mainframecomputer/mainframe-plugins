@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <rect width="1440" height="900" fill="#101112"/>
+  <rect x="90" y="80" width="1260" height="740" rx="24" fill="#171717" stroke="#303233" stroke-width="2"/>
+  <text x="150" y="160" fill="#fbf7ef" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="700">Mainframe for Claude Code</text>
+  <text x="150" y="220" fill="#c7bfb2" font-family="Inter, Arial, sans-serif" font-size="28">Claude-compatible Stop hook output</text>
+  <rect x="150" y="292" width="1140" height="144" rx="18" fill="#211d18" stroke="#d69c57"/>
+  <text x="192" y="376" fill="#ffd49d" font-family="SFMono-Regular, Menlo, monospace" font-size="32">{ "decision": "block", "reason": "2.5 hours..." }</text>
+  <rect x="150" y="500" width="350" height="170" rx="18" fill="#202428" stroke="#3a4753"/>
+  <text x="190" y="565" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Skill</text>
+  <text x="190" y="620" fill="#b9c4d0" font-family="Inter, Arial, sans-serif" font-size="24">share-video</text>
+  <rect x="545" y="500" width="350" height="170" rx="18" fill="#182421" stroke="#2f635c"/>
+  <text x="585" y="565" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">MCP</text>
+  <text x="585" y="620" fill="#a5eadf" font-family="Inter, Arial, sans-serif" font-size="24">mainframe</text>
+  <rect x="940" y="500" width="350" height="170" rx="18" fill="#241b28" stroke="#72436e"/>
+  <text x="980" y="565" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">AFK</text>
+  <text x="980" y="620" fill="#e8b6e3" font-family="Inter, Arial, sans-serif" font-size="24">one-hour default</text>
+</svg>
