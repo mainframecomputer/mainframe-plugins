@@ -6,9 +6,7 @@ description: |
   summary, design review, or durable explanation of completed agent work.
   Do not trigger for trivial answers, active back-and-forth, or sensitive
   content unless the user asks.
-metadata:
-  author: Mainframe
-  version: "0.1.0"
+author: Mainframe
 ---
 
 # Mainframe
