@@ -36,9 +36,9 @@ another chat message.
 ## Tool choice
 
 - Default to `generate_video` so Mainframe can create the video, including
-  narration or the user's avatar.
+  narration and the user's avatar.
 - Use `upload_video` only when you already have a polished video that does not
-  need Mainframe narration or the user's avatar.
+  need Mainframe narration and the user's avatar.
 - Use `get_video` after either creation path when you need to check video
   status.
 
