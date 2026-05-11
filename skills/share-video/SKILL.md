@@ -1,12 +1,11 @@
 ---
 name: share-video
 description: |
-  Share a short Mainframe video update when completed agent work would be
-  easier to review as a demo, walkthrough, async update, handoff, PR recap,
-  visual bug report, status summary, design review, or durable explanation.
-  Also use when the user explicitly asks for a video. Do not trigger for
-  trivial answers, active back-and-forth, or videos that would expose
-  sensitive content.
+  Share a short Mainframe video that explains what you did. Use it for demos,
+  walkthroughs, async updates, handoffs, PR recaps, visual bug reports,
+  status summaries, design reviews, or whenever completed work is easier to
+  review as video. Do not use it for trivial answers, active back-and-forth,
+  unfinished work, or content that would expose secrets or sensitive data.
 author: Mainframe
 ---
 
