@@ -1,11 +1,11 @@
 ---
 name: share-video
 description: |
-  Share a short Mainframe video that explains what you did. Use it for demos,
-  walkthroughs, async updates, handoffs, PR recaps, visual bug reports,
-  status summaries, design reviews, or whenever completed work is easier to
-  review as video. Do not use it for trivial answers, active back-and-forth,
-  unfinished work, or content that would expose secrets or sensitive data.
+  Share a short video that explains what you did. Use it for demos,
+  walkthroughs, async updates, handoffs, PR recaps, visual bug reports, status
+  summaries, design reviews, or whenever completed work is easier to review as
+  video. Do not use it for trivial answers, active back-and-forth, unfinished
+  work, or content that would expose secrets or sensitive data.
 author: Mainframe
 ---
 
