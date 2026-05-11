@@ -1,7 +1,7 @@
-# Mainframe
+# Mainframe skills
 
-Mainframe is the video layer for agent work. This repository ships the
-`share-video` skill for agents that support the open agent skills ecosystem.
+This repository ships `share-video`, an installable skill for agents that
+support the open agent skills ecosystem.
 
 ## Install
 
@@ -15,7 +15,7 @@ To preview the available skills without installing:
 npx skills add mainframecomputer/mainframe-plugins --list
 ```
 
-## Skill
+## Included skill
 
 - `share-video` — share a short video that explains what the agent did,
   useful for demos, walkthroughs, PR recaps, handoffs, and visual bug reports.
