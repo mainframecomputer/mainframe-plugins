@@ -34,14 +34,15 @@ more useful than another chat message.
 
 ## Tool choice
 
-Use exactly one creation tool:
+Default to `generate_video`. Use `upload_video` only for finished footage:
 
 1. Call `generate_video` when Mainframe should create the video, including
    narration or the user's avatar.
-2. Call `upload_video` instead when you already have a finished video file,
-   such as a local screen recording, that does not need Mainframe narration
-   or the user's avatar.
-3. Call `get_video` only to check the status of an existing video.
+2. Call `upload_video` instead only when you already have a finished video
+   file, such as a local screen recording, that does not need Mainframe
+   narration or the user's avatar.
+3. After either creation path, call `get_video` when you need to check the
+   status of the video.
 
 ## Output format
 
