@@ -15,9 +15,6 @@ Mainframe is the video layer for agent work. Use it to create or share
 short, durable video updates when a visual or narrated explanation is
 more useful than another chat message.
 
-When the host exposes plugin slash commands, this skill is available as
-`/mainframe:share-video`.
-
 ## Use Mainframe when
 
 - The user explicitly asks for a video, demo, walkthrough, recap, or async update.
@@ -37,20 +34,14 @@ When the host exposes plugin slash commands, this skill is available as
 
 ## Tool choice
 
-1. Default: call `generate_video` to create the video.
-2. Only call `upload_video` when you already have a finished video file,
-   such as a local screen recording, and it does not need Mainframe narration
+Use exactly one creation tool:
+
+1. Call `generate_video` when Mainframe should create the video, including
+   narration or the user's avatar.
+2. Call `upload_video` instead when you already have a finished video file,
+   such as a local screen recording, that does not need Mainframe narration
    or the user's avatar.
-3. To check status of an existing video, call `get_video`.
-
-## Authentication
-
-Mainframe uses WorkOS-backed OAuth with dynamic client registration. The
-first time you call a Mainframe tool, your host may open a browser for
-the user to authorize Mainframe. Tell the user "Mainframe needs you to
-sign in once" and wait. Subsequent calls in the same session reuse the
-token. If a tool returns 401 after the user signed in, retry; the host
-refreshes the token transparently.
+3. Call `get_video` only to check the status of an existing video.
 
 ## Output format
 
