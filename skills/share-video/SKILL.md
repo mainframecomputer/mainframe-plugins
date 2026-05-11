@@ -5,8 +5,8 @@ description: |
   easier to review as a demo, walkthrough, async update, handoff, PR recap,
   visual bug report, status summary, design review, or durable explanation.
   Also use when the user explicitly asks for a video. Do not trigger for
-  trivial answers, active back-and-forth, or sensitive content unless the
-  user asks.
+  trivial answers, active back-and-forth, or videos that would expose
+  sensitive content.
 author: Mainframe
 ---
 
