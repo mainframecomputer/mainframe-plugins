@@ -17,8 +17,8 @@ npx skills add mainframecomputer/mainframe-plugins --list
 
 ## Skill
 
-- `share-video` — create, generate, upload, or share a short Mainframe video
-  when a demo, walkthrough, PR recap, async update, visual bug report, or
-  durable handoff would be clearer than another chat message.
+- `share-video` — generate or share a short Mainframe video when a demo,
+  walkthrough, PR recap, async update, visual bug report, or durable handoff
+  would be clearer than another chat message.
 
 The skill lives at `skills/share-video/SKILL.md`.
