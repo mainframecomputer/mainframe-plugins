@@ -1,9 +1,8 @@
 # Mainframe Plugins
 
-Mainframe plugin packaging for coding-agent hosts. This repo ships a shared
-`share-video` skill, hosted MCP wiring, and optional AFK stop hooks that can
-suggest a short Mainframe video after meaningful agent work when the user has
-been away.
+Mainframe is the video layer for agent work. This repo packages the
+`share-video` skill, hosted MCP wiring, and optional AFK stop hooks for
+coding-agent hosts.
 
 ## What Ships
 
