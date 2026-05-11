@@ -15,7 +15,7 @@ Mainframe is the video layer for agent work. Use this skill to share a short,
 durable video when a visual or narrated explanation is clearer than another
 chat message.
 
-## Use when
+## Good fits
 
 - The user asks for a video, demo, walkthrough, recap, or async update.
 - Completed work would be easier to review as a short video.
@@ -24,7 +24,7 @@ chat message.
   flow would be clearer on video.
 - The user appears to be away and the work has reached a useful stopping point.
 
-## Do not use when
+## Skip when
 
 - The answer is short and textual.
 - The user is actively iterating in chat.
@@ -35,15 +35,10 @@ chat message.
 
 ## Tool choice
 
-Creation:
-
 - Default to `generate_video` so Mainframe can create the video, including
   narration or the user's avatar.
 - Use `upload_video` only when you already have a polished video that does not
   need Mainframe narration or the user's avatar.
-
-Status:
-
 - Use `get_video` after either creation path when you need to check video
   status.
 
@@ -54,4 +49,3 @@ After using Mainframe, respond with:
 - the Mainframe `watchUrl`, which stays stable even while the video is still
   generating
 - a one-sentence description of what the video covers
-- whether the video is ready or still generating
