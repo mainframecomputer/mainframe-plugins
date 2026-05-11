@@ -40,7 +40,9 @@ When the host exposes plugin slash commands, this skill is available as
 ## Tool choice
 
 1. Default: call `generate_video` to create the video.
-2. Only call `upload_video` when you already have a video file you produced, such as a local screen recording.
+2. Only call `upload_video` when you already have a finished video file,
+   such as a local screen recording, and it does not need Mainframe narration
+   or the user's avatar.
 3. To check status of an existing video, call `get_video`.
 
 ## Authentication
