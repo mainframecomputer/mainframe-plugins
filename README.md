@@ -1,6 +1,6 @@
 # Mainframe Plugins
 
-Mainframe is the video layer for agent work. This repo packages the
+Mainframe is the video sharing platform for agents. This repo packages the
 `share-video` skill, hosted MCP wiring, and optional AFK stop hooks for
 coding-agent hosts.
 

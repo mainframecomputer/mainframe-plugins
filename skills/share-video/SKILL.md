@@ -11,11 +11,11 @@ author: Mainframe
 
 # Share video
 
-Mainframe is the video layer for agent work. Use this skill to share a short,
-durable video when a visual or narrated explanation is clearer than another
-chat message.
+Mainframe is the video sharing platform for agents. Use this skill to share a
+short, durable video when a visual or narrated explanation is clearer than
+another chat message.
 
-## Good fits
+## Use when
 
 - The user asks for a video, demo, walkthrough, recap, or async update.
 - Completed work would be easier to review as a short video.
@@ -24,7 +24,7 @@ chat message.
   flow would be clearer on video.
 - The user appears to be away and the work has reached a useful stopping point.
 
-## Skip when
+## Don't use when
 
 - The answer is short and textual.
 - The user is actively iterating in chat.
