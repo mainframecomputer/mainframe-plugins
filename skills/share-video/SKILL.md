@@ -2,52 +2,57 @@
 name: share-video
 description: |
   Share a short video that explains what you did. Use it for demos,
-  walkthroughs, async updates, handoffs, PR recaps, visual bug reports, status
-  summaries, design reviews, or whenever completed work is easier to review as
-  video. Do not use it for trivial answers, active back-and-forth, unfinished
-  work, or content that would expose secrets or sensitive data.
+  walkthroughs, PR recaps, async handoffs, visual bug reports, design reviews,
+  or any completed work that is easier to review in video form. Do not use it
+  for trivial answers, active back-and-forth, unfinished work, or sensitive
+  data.
 author: Mainframe
 ---
 
-# Mainframe
+# Share video
 
-Mainframe is the video layer for agent work. Use it to create or share
-short, durable video updates when a visual or narrated explanation is
-more useful than another chat message.
+Mainframe is the video layer for agent work. Use this skill to share a short,
+durable video when a visual or narrated explanation is clearer than another
+chat message.
 
-## Use Mainframe when
+## Use when
 
-- The user explicitly asks for a video, demo, walkthrough, recap, or async update.
-- You finished a multi-step task and the result would be easier to review as a video.
-- You changed UI, design, frontend behavior, charts, dashboards, or anything visual.
-- You created or reviewed a PR and a short handoff video would reduce review friction.
-- The user appears to be away from keyboard and the work has reached a terminal state.
-- A bug reproduction, before/after comparison, or validation flow would be clearer on video.
+- The user asks for a video, demo, walkthrough, recap, or async update.
+- Completed work would be easier to review as a short video.
+- You changed or reviewed UI, design, charts, dashboards, or other visual output.
+- A PR recap, handoff, bug reproduction, before/after comparison, or validation
+  flow would be clearer on video.
+- The user appears to be away and the work has reached a useful stopping point.
 
-## Do not use Mainframe when
+## Do not use when
 
 - The answer is short and textual.
 - The user is actively iterating in chat.
 - The task is not done.
-- The video would expose secrets, tokens, credentials, private customer data, or unnecessary sensitive context.
+- The video would expose secrets, tokens, credentials, private customer data,
+  or unnecessary sensitive context.
 - The user explicitly says not to create a video.
 
 ## Tool choice
 
-Default to `generate_video`. Use `upload_video` only for finished footage:
+Creation:
 
-1. Call `generate_video` when Mainframe should create the video, including
-   narration or the user's avatar.
-2. Call `upload_video` instead only when you already have a finished video
-   file, such as a local screen recording, that does not need Mainframe
-   narration or the user's avatar.
-3. After either creation path, call `get_video` when you need to check the
-   status of the video.
+- Default to `generate_video` so Mainframe can create the video, including
+  narration or the user's avatar.
+- Use `upload_video` only when you already have finished footage, such as a
+  local screen recording, that does not need Mainframe narration or the user's
+  avatar.
+
+Status:
+
+- Use `get_video` after either creation path when you need to check video
+  status.
 
 ## Output format
 
 After using Mainframe, respond with:
 
-- the Mainframe `watchUrl`, which stays stable even while the video is still generating
+- the Mainframe `watchUrl`, which stays stable even while the video is still
+  generating
 - a one-sentence description of what the video covers
 - whether the video is ready or still generating
