@@ -17,8 +17,8 @@ npx skills add mainframecomputer/mainframe-plugins --list
 
 ## Skill
 
-- `share-video` — share a short Mainframe video update when a demo,
-  walkthrough, PR recap, async update, visual bug report, or durable handoff
-  would be clearer than another chat message.
+- `share-video` — share a short Mainframe video that explains what the agent
+  did, useful for demos, walkthroughs, PR recaps, handoffs, and visual bug
+  reports.
 
 The skill lives at `skills/share-video/SKILL.md`.
