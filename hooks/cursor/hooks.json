@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": "node \"${CURSOR_PLUGIN_ROOT:-${MAINFRAME_PLUGIN_ROOT:-$PWD}}/dist/hooks/cursor/stop.js\"",
+        "timeout": 30,
+        "loop_limit": 1
+      }
+    ]
+  }
+}
