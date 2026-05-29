@@ -1,4 +1,12 @@
 {
-  "event": "stop",
-  "timestamp": "2026-05-08T15:30:00.000Z"
+  "conversation_id": "conversation-123",
+  "generation_id": "generation-456",
+  "model": "gpt-5.5",
+  "hook_event_name": "stop",
+  "cursor_version": "1.7.2",
+  "workspace_roots": ["/workspace/mainframe-plugins"],
+  "user_email": null,
+  "transcript_path": null,
+  "status": "completed",
+  "loop_count": 0
 }

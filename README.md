@@ -8,7 +8,6 @@ Mainframe is the video sharing platform for agents. This repo packages the
 - Cursor plugin manifest and marketplace metadata
 - Cursor `stop` hook adapter
 - Canonical `share-video` skill at `skills/share-video/SKILL.md`
-- Canonical slash command `/mainframe:share-video`
 - Mainframe MCP configuration at `.mcp.json`
 
 ## Host files
@@ -25,14 +24,13 @@ Mainframe is the video sharing platform for agents. This repo packages the
 | `.cursor-plugin/` | Cursor manifest and marketplace metadata.                              |
 | `hooks/`          | Shared AFK gate plus the Cursor hook adapter and fixtures.             |
 | `tooling/`        | Repo maintenance scripts for generation, checks, and release archives. |
-| `assets/`         | Marketplace icon, logo, and screenshots.                               |
+| `assets/`         | Marketplace logo.                                                      |
 | `release/`        | Ignored output directory for generated release archives.               |
 
 ## Install
 
 Add Mainframe from the Cursor marketplace listing. The Cursor package wires the
-skill, hosted MCP server, screenshots, and lowercase `stop` hook with
-`loop_limit: 1`.
+skill, hosted MCP server, and lowercase `stop` hook with `loop_limit: 1`.
 
 ## Hook behavior
 
@@ -69,7 +67,7 @@ Useful scripts:
 
 | Script                 | Purpose                                                                       |
 | ---------------------- | ----------------------------------------------------------------------------- |
-| `bun run generate`     | Regenerate host manifests, marketplace files, and package metadata.           |
+| `bun run generate`     | Regenerate Cursor manifests, marketplace files, and package metadata.         |
 | `bun run verify`       | Local full check: generated drift, typecheck, build, lint, format, and tests. |
 | `bun run verify:ci`    | CI variant that runs `generate` and fails on generated diffs.                 |
 | `bun run build`        | Build runtime hook JavaScript into `dist/`.                                   |

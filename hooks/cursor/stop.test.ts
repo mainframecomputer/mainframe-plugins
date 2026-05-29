@@ -9,12 +9,13 @@ import { evaluateStopHook } from "../core/subprocess.js";
 const fixtureDir = dirname(fileURLToPath(import.meta.url));
 const stopPath = join(fixtureDir, "fixtures", "stop.json");
 const transcriptPath = join(fixtureDir, "fixtures", "transcript.jsonl");
+const stopTimeMs = Date.parse("2026-05-08T15:30:00.000Z");
 
 describe("Cursor stop hook", () => {
-  it("uses the Cursor transcript environment path and followup output", () => {
+  it("uses the Cursor transcript path and followup output", () => {
     const output = evaluateStopHook({
-      stdin: readFileSync(stopPath, "utf8"),
-      env: { CURSOR_TRANSCRIPT_PATH: transcriptPath },
+      stdin: stopInput({ transcript_path: transcriptPath }),
+      nowMs: stopTimeMs,
     });
 
     expect(output).toMatchObject({ followup_message: expect.stringContaining("2.5 hours") });
@@ -23,12 +24,38 @@ describe("Cursor stop hook", () => {
   });
 
   it("does not fire before the configured threshold", () => {
-    const input = JSON.stringify({ event: "stop", timestamp: "2026-05-08T13:30:00.000Z" });
     expect(
       evaluateStopHook({
-        stdin: input,
-        env: { CURSOR_TRANSCRIPT_PATH: transcriptPath },
+        stdin: stopInput({ transcript_path: transcriptPath }),
+        nowMs: Date.parse("2026-05-08T13:30:00.000Z"),
+      }),
+    ).toEqual({});
+  });
+
+  it("does not fire for aborted or errored stops", () => {
+    for (const status of ["aborted", "error"]) {
+      expect(
+        evaluateStopHook({
+          stdin: stopInput({ status, transcript_path: transcriptPath }),
+          nowMs: stopTimeMs,
+        }),
+      ).toEqual({});
+    }
+  });
+
+  it("does not fire after an automatic followup already looped", () => {
+    expect(
+      evaluateStopHook({
+        stdin: stopInput({ loop_count: 1, transcript_path: transcriptPath }),
+        nowMs: stopTimeMs,
       }),
     ).toEqual({});
   });
 });
+
+function stopInput(overrides: Record<string, unknown>): string {
+  return JSON.stringify({
+    ...JSON.parse(readFileSync(stopPath, "utf8")),
+    ...overrides,
+  });
+}

@@ -28,7 +28,7 @@ function evaluateStopHookDecision(input: StopHookEvaluationInput): StopHookDecis
   }
 
   const hookInput = parseJsonObject(input.stdin);
-  if (hookInput === null || isLoopGuardActive(hookInput)) {
+  if (hookInput === null || hookInput.status !== "completed" || readLoopCount(hookInput) > 0) {
     return { kind: "skip" };
   }
 
@@ -72,19 +72,18 @@ function outputForHost(decision: StopHookDecision): StopHookOutput {
   return { followup_message: decision.reason };
 }
 
-function isLoopGuardActive(input: JsonObject): boolean {
-  return input.stop_hook_active === true || input.stopHookActive === true;
-}
-
 function readTranscriptPath(input: JsonObject): string | null {
-  for (const key of ["transcript_path", "transcriptPath"]) {
-    const value = input[key];
-    if (typeof value === "string") {
-      return value;
-    }
+  const value = input.transcript_path;
+  if (typeof value === "string") {
+    return value;
   }
 
   return null;
+}
+
+function readLoopCount(input: JsonObject): number {
+  const value = input.loop_count;
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
 function readStopTimeMs(input: JsonObject, nowMs: number): number {

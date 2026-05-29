@@ -25,9 +25,7 @@
     "AGENTS.md",
     "LICENSE",
     "README.md",
-    "assets/icon.png",
     "assets/logo.png",
-    "assets/screenshots/cursor-mainframe.png",
     "dist",
     "hooks/core/afk-gate.ts",
     "hooks/core/json.ts",
@@ -51,7 +49,7 @@
     "format:check": "oxfmt --check .",
     "test": "vitest run",
     "verify": "bun run check:generated && bun run typecheck && bun run build && bun run lint && bun run format:check && bun run test",
-    "verify:ci": "bun run generate && git diff --exit-code && bun run typecheck && bun run build && bun run lint && bun run format:check && bun run test",
+    "verify:ci": "bun run generate && git diff --exit-code && bun run typecheck && bun run build && git diff --exit-code -- dist && bun run lint && bun run format:check && bun run test",
     "prepare": "husky"
   },
   "dependencies": {
