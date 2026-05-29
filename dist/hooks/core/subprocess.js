@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { evaluateAfkGate } from "./afk-gate.js";
-import { isJsonObject, parseJsonObject } from "./json.js";
-import { parseTimestampMs, summarizeTranscriptFile } from "./transcript.js";
+import { parseJsonObject } from "./json.js";
+import { summarizeTranscriptFile } from "./transcript.js";
 export function evaluateStopHook(input) {
     return outputForHost(evaluateStopHookDecision(input));
 }
@@ -19,7 +19,7 @@ function evaluateStopHookDecision(input) {
         return { kind: "skip" };
     }
     const gate = evaluateAfkGate({
-        stopTimeMs: readStopTimeMs(hookInput, input.nowMs ?? Date.now()),
+        stopTimeMs: input.nowMs ?? Date.now(),
         lastUserTimeMs: summary.lastUserTimeMs,
         workHappened: summary.workHappened,
         alreadyShared: summary.alreadyShared,
@@ -50,19 +50,5 @@ function readTranscriptPath(input) {
 function readLoopCount(input) {
     const value = input.loop_count;
     return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-function readStopTimeMs(input, nowMs) {
-    const directKeys = ["stop_time_ms", "stopTimeMs", "timestamp", "time", "created_at", "createdAt"];
-    for (const key of directKeys) {
-        const parsed = parseTimestampMs(input[key]);
-        if (parsed !== null) {
-            return parsed;
-        }
-    }
-    const event = input.event;
-    if (isJsonObject(event)) {
-        return readStopTimeMs(event, nowMs);
-    }
-    return nowMs;
 }
 //# sourceMappingURL=subprocess.js.map

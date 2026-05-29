@@ -1,13 +1,10 @@
-import { z } from "zod";
-export const jsonObjectSchema = z.record(z.string(), z.unknown());
 export function isJsonObject(value) {
-    return jsonObjectSchema.safeParse(value).success;
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 export function parseJsonObject(text) {
     try {
         const parsed = JSON.parse(text);
-        const result = jsonObjectSchema.safeParse(parsed);
-        return result.success ? result.data : null;
+        return isJsonObject(parsed) ? parsed : null;
     }
     catch {
         return null;
