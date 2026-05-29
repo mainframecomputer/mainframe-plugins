@@ -32,7 +32,8 @@ function evaluateStopHookDecision(input: StopHookEvaluationInput): StopHookDecis
     return { kind: "skip" };
   }
 
-  const transcriptPath = readTranscriptPath(hookInput) ?? readStringEnv(env, "CURSOR_TRANSCRIPT_PATH");
+  const transcriptPath =
+    readTranscriptPath(hookInput) ?? readStringEnv(env, "CURSOR_TRANSCRIPT_PATH");
   if (transcriptPath === null) {
     return { kind: "skip" };
   }

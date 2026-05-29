@@ -78,9 +78,7 @@ const SharedManifestSchema = z.object({
   ),
   icon: z.literal("assets/icon.png"),
   logo: z.literal("assets/logo.png"),
-  screenshots: z.tuple([
-    z.literal("assets/screenshots/cursor-mainframe.png"),
-  ]),
+  screenshots: z.tuple([z.literal("assets/screenshots/cursor-mainframe.png")]),
   privacyPolicyUrl: z.literal("https://mainframe.app/privacy"),
   privacyPolicyURL: z.literal("https://mainframe.app/privacy"),
   termsOfServiceUrl: z.literal("https://mainframe.app/terms"),
