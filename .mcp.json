@@ -1,7 +1,6 @@
 {
   "mcpServers": {
     "mainframe": {
-      "type": "http",
       "url": "https://mcp.mainframe.app/mcp"
     }
   }
