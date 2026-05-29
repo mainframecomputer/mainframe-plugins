@@ -11,12 +11,15 @@ export type StopHookEvaluationInput = {
 
 type StopHookDecision = { kind: "skip" } | { kind: "suggest"; reason: string };
 
-export type StopHookOutput =
-  | { followup_message: string; decision?: never; reason?: never }
-  | { decision?: never; reason?: never; followup_message?: never };
+export type StopHookOutput = { followup_message?: string };
 
 export function evaluateStopHook(input: StopHookEvaluationInput): StopHookOutput {
-  return outputForHost(evaluateStopHookDecision(input));
+  const decision = evaluateStopHookDecision(input);
+  if (decision.kind === "skip") {
+    return {};
+  }
+
+  return { followup_message: decision.reason };
 }
 
 function evaluateStopHookDecision(input: StopHookEvaluationInput): StopHookDecision {
@@ -53,14 +56,6 @@ export function runStopHookCli(): void {
   const stdin = readFileSync(0, "utf8");
   const output = evaluateStopHook({ stdin });
   process.stdout.write(`${JSON.stringify(output)}\n`);
-}
-
-function outputForHost(decision: StopHookDecision): StopHookOutput {
-  if (decision.kind === "skip") {
-    return {};
-  }
-
-  return { followup_message: decision.reason };
 }
 
 function readTranscriptPath(input: JsonObject): string | null {

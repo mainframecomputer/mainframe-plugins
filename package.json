@@ -2,7 +2,7 @@
   "name": "@mainframe/plugins",
   "version": "0.1.0",
   "private": true,
-  "description": "Mainframe Cursor plugin manifest, skill, MCP wiring, and AFK video handoff hook.",
+  "description": "Mainframe Cursor plugin manifest, skill, MCP wiring, and stop hook.",
   "keywords": [
     "agent-skills",
     "hooks",

@@ -1,6 +1,5 @@
 {
   "name": "mainframe",
-  "displayName": "Mainframe",
   "version": "0.1.0",
   "description": "Create and share short Mainframe video updates from coding-agent work.",
   "author": {
@@ -10,9 +9,7 @@
   "homepage": "https://mainframe.app",
   "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
   "license": "UNLICENSED",
-  "category": "productivity",
   "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
-  "tags": ["video", "agent-work", "handoff", "mcp", "hooks"],
   "logo": "assets/logo.png",
   "skills": "./skills",
   "mcpServers": "./.mcp.json",

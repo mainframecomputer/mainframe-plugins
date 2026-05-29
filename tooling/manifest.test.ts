@@ -13,27 +13,18 @@ const AuthorSchema = z
 const RepositorySchema = z.literal("https://github.com/mainframecomputer/mainframe-plugins.git");
 
 const SharedManifestSchema = z.object({
-  displayName: z.literal("Mainframe"),
   version: z.literal("0.1.0"),
   description: z.literal("Create and share short Mainframe video updates from coding-agent work."),
   author: AuthorSchema,
   homepage: z.literal("https://mainframe.app"),
   repository: RepositorySchema,
   license: z.literal("UNLICENSED"),
-  category: z.literal("productivity"),
   keywords: z.tuple([
     z.literal("mainframe"),
     z.literal("agent-skills"),
     z.literal("mcp"),
     z.literal("hooks"),
     z.literal("video"),
-  ]),
-  tags: z.tuple([
-    z.literal("video"),
-    z.literal("agent-work"),
-    z.literal("handoff"),
-    z.literal("mcp"),
-    z.literal("hooks"),
   ]),
   logo: z.literal("assets/logo.png"),
 });

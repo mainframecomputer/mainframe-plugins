@@ -7,7 +7,6 @@ const JsonObjectSchema = z.record(z.string(), z.unknown());
 
 const MetadataSchema = z.object({
   name: z.string().min(1),
-  displayName: z.string().min(1),
   packageName: z.string().min(1),
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
   description: z.string().min(1),
@@ -18,9 +17,7 @@ const MetadataSchema = z.object({
   homepage: z.string().url(),
   repository: z.string().url(),
   license: z.literal("UNLICENSED"),
-  category: z.string().min(1),
   keywords: z.array(z.string().min(1)).min(1),
-  tags: z.array(z.string().min(1)).min(1),
   logo: z.string().min(1),
   mcpServers: z.string().min(1),
   skillDirectory: z.string().min(1),
@@ -28,7 +25,6 @@ const MetadataSchema = z.object({
 
 const metadata = MetadataSchema.parse({
   name: "mainframe",
-  displayName: "Mainframe",
   packageName: "@mainframe/plugins",
   version: "0.1.0",
   description: "Create and share short Mainframe video updates from coding-agent work.",
@@ -39,9 +35,7 @@ const metadata = MetadataSchema.parse({
   homepage: "https://mainframe.app",
   repository: "https://github.com/mainframecomputer/mainframe-plugins.git",
   license: "UNLICENSED",
-  category: "productivity",
   keywords: ["mainframe", "agent-skills", "mcp", "hooks", "video"],
-  tags: ["video", "agent-work", "handoff", "mcp", "hooks"],
   logo: "assets/logo.png",
   mcpServers: "./.mcp.json",
   skillDirectory: "./skills",
@@ -49,16 +43,13 @@ const metadata = MetadataSchema.parse({
 
 const sharedManifest = {
   name: metadata.name,
-  displayName: metadata.displayName,
   version: metadata.version,
   description: metadata.description,
   author: metadata.author,
   homepage: metadata.homepage,
   repository: metadata.repository,
   license: metadata.license,
-  category: metadata.category,
   keywords: metadata.keywords,
-  tags: metadata.tags,
   logo: metadata.logo,
   skills: metadata.skillDirectory,
   mcpServers: metadata.mcpServers,
@@ -95,8 +86,7 @@ function updatePackageJson(): void {
   const packageJson = JsonObjectSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
   packageJson.name = metadata.packageName;
   packageJson.version = metadata.version;
-  packageJson.description =
-    "Mainframe Cursor plugin manifest, skill, MCP wiring, and AFK video handoff hook.";
+  packageJson.description = "Mainframe Cursor plugin manifest, skill, MCP wiring, and stop hook.";
   packageJson.private = true;
   packageJson.license = metadata.license;
   packageJson.homepage = metadata.homepage;

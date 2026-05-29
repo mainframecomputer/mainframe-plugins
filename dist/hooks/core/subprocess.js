@@ -3,7 +3,11 @@ import { evaluateAfkGate } from "./afk-gate.js";
 import { parseJsonObject } from "./json.js";
 import { summarizeTranscriptFile } from "./transcript.js";
 export function evaluateStopHook(input) {
-    return outputForHost(evaluateStopHookDecision(input));
+    const decision = evaluateStopHookDecision(input);
+    if (decision.kind === "skip") {
+        return {};
+    }
+    return { followup_message: decision.reason };
 }
 function evaluateStopHookDecision(input) {
     const hookInput = parseJsonObject(input.stdin);
@@ -33,12 +37,6 @@ export function runStopHookCli() {
     const stdin = readFileSync(0, "utf8");
     const output = evaluateStopHook({ stdin });
     process.stdout.write(`${JSON.stringify(output)}\n`);
-}
-function outputForHost(decision) {
-    if (decision.kind === "skip") {
-        return {};
-    }
-    return { followup_message: decision.reason };
 }
 function readTranscriptPath(input) {
     const value = input.transcript_path;
