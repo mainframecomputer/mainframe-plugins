@@ -1,19 +1,17 @@
 import { readFileSync } from "node:fs";
 
-import { evaluateAfkGate, thresholdMsFromEnv } from "./afk-gate.js";
+import { evaluateAfkGate } from "./afk-gate.js";
 import { isJsonObject, parseJsonObject, type JsonObject } from "./json.js";
 import { parseTimestampMs, summarizeTranscriptFile } from "./transcript.js";
 
 export type StopHookEvaluationInput = {
   stdin: string;
-  env?: NodeJS.ProcessEnv;
   nowMs?: number;
 };
 
 type StopHookDecision = { kind: "skip" } | { kind: "suggest"; reason: string };
 
 export type StopHookOutput =
-  | { decision: "block"; reason: string; followup_message?: never }
   | { followup_message: string; decision?: never; reason?: never }
   | { decision?: never; reason?: never; followup_message?: never };
 
@@ -22,18 +20,12 @@ export function evaluateStopHook(input: StopHookEvaluationInput): StopHookOutput
 }
 
 function evaluateStopHookDecision(input: StopHookEvaluationInput): StopHookDecision {
-  const env = input.env ?? process.env;
-  if (env.MAINFRAME_HOOK === "0") {
-    return { kind: "skip" };
-  }
-
   const hookInput = parseJsonObject(input.stdin);
   if (hookInput === null || hookInput.status !== "completed" || readLoopCount(hookInput) > 0) {
     return { kind: "skip" };
   }
 
-  const transcriptPath =
-    readTranscriptPath(hookInput) ?? readStringEnv(env, "CURSOR_TRANSCRIPT_PATH");
+  const transcriptPath = readTranscriptPath(hookInput);
   if (transcriptPath === null) {
     return { kind: "skip" };
   }
@@ -46,7 +38,6 @@ function evaluateStopHookDecision(input: StopHookEvaluationInput): StopHookDecis
   const gate = evaluateAfkGate({
     stopTimeMs: readStopTimeMs(hookInput, input.nowMs ?? Date.now()),
     lastUserTimeMs: summary.lastUserTimeMs,
-    thresholdMs: thresholdMsFromEnv(env.MAINFRAME_HOOK_AFK_HOURS),
     workHappened: summary.workHappened,
     alreadyShared: summary.alreadyShared,
   });
@@ -101,9 +92,4 @@ function readStopTimeMs(input: JsonObject, nowMs: number): number {
   }
 
   return nowMs;
-}
-
-function readStringEnv(env: NodeJS.ProcessEnv, key: string): string | null {
-  const value = env[key];
-  return value === undefined || value.trim() === "" ? null : value;
 }

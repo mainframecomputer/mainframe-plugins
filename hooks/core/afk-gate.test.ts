@@ -1,18 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  DEFAULT_AFK_THRESHOLD_MS,
-  evaluateAfkGate,
-  MS_PER_HOUR,
-  thresholdMsFromEnv,
-} from "./afk-gate.js";
+import { DEFAULT_AFK_THRESHOLD_MS, evaluateAfkGate, MS_PER_HOUR } from "./afk-gate.js";
 
 describe("evaluateAfkGate", () => {
   it("fires after the threshold when work happened and no video was shared", () => {
     const result = evaluateAfkGate({
       stopTimeMs: Date.parse("2026-05-08T15:30:00.000Z"),
       lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
-      thresholdMs: MS_PER_HOUR,
       workHappened: true,
       alreadyShared: false,
     });
@@ -29,7 +23,6 @@ describe("evaluateAfkGate", () => {
       evaluateAfkGate({
         stopTimeMs: Date.parse("2026-05-08T15:30:00.000Z"),
         lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
-        thresholdMs: MS_PER_HOUR,
         workHappened: false,
         alreadyShared: false,
       }),
@@ -37,13 +30,15 @@ describe("evaluateAfkGate", () => {
   });
 
   it("uses one hour as the default threshold", () => {
-    expect(thresholdMsFromEnv(undefined)).toBe(DEFAULT_AFK_THRESHOLD_MS);
-    expect(thresholdMsFromEnv("")).toBe(DEFAULT_AFK_THRESHOLD_MS);
-    expect(thresholdMsFromEnv("2.5")).toBe(2.5 * MS_PER_HOUR);
-  });
+    expect(DEFAULT_AFK_THRESHOLD_MS).toBe(MS_PER_HOUR);
 
-  it("rejects invalid configured thresholds instead of hiding them", () => {
-    expect(() => thresholdMsFromEnv("nope")).toThrow();
-    expect(() => thresholdMsFromEnv("-1")).toThrow();
+    expect(
+      evaluateAfkGate({
+        stopTimeMs: Date.parse("2026-05-08T13:59:59.000Z"),
+        lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
+        workHappened: true,
+        alreadyShared: false,
+      }),
+    ).toEqual({ fire: false });
   });
 });

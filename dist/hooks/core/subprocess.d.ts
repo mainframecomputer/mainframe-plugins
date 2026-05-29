@@ -1,13 +1,8 @@
 export type StopHookEvaluationInput = {
     stdin: string;
-    env?: NodeJS.ProcessEnv;
     nowMs?: number;
 };
 export type StopHookOutput = {
-    decision: "block";
-    reason: string;
-    followup_message?: never;
-} | {
     followup_message: string;
     decision?: never;
     reason?: never;

@@ -1,7 +1,7 @@
 # Mainframe plugins
 
 Mainframe is the video sharing platform for agents. This repo packages the
-`share-video` skill, hosted MCP wiring, and optional AFK stop hook for Cursor.
+`share-video` skill, hosted MCP wiring, and Cursor stop hook.
 
 ## What ships
 
@@ -22,7 +22,7 @@ Mainframe is the video sharing platform for agents. This repo packages the
 | ----------------- | ---------------------------------------------------------------------- |
 | `skills/`         | Canonical Mainframe skill content.                                     |
 | `.cursor-plugin/` | Cursor manifest and marketplace metadata.                              |
-| `hooks/`          | Shared AFK gate plus the Cursor hook adapter and fixtures.             |
+| `hooks/`          | Shared stop gate plus the Cursor hook adapter and fixtures.            |
 | `tooling/`        | Repo maintenance scripts for generation, checks, and release archives. |
 | `assets/`         | Marketplace logo.                                                      |
 | `release/`        | Ignored output directory for generated release archives.               |
@@ -39,14 +39,11 @@ when:
 
 - a real user message is present in the recent transcript
 - at least one tool or command-like work event happened after that message
-- the user has been away longer than the configured threshold
+- the user has been away for at least one hour
 - no Mainframe video appears to have already been generated or shared
 
 The suggestion text includes elapsed hours only. It does not include transcript
 content.
-
-Set `MAINFRAME_HOOK=0` to disable stop-hook suggestions. Set
-`MAINFRAME_HOOK_AFK_HOURS` to change the default one-hour threshold.
 
 ## Development
 
@@ -54,7 +51,7 @@ Most changes touch one of three sources of truth:
 
 - `tooling/generate.ts` for plugin and marketplace metadata
 - `skills/share-video/SKILL.md` for the skill
-- `hooks/core/afk-gate.ts` for shared AFK behavior
+- `hooks/core/afk-gate.ts` for shared stop-gate behavior
 
 ```sh
 bun install

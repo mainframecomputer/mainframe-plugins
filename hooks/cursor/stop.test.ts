@@ -23,7 +23,7 @@ describe("Cursor stop hook", () => {
     expect(output.followup_message).not.toContain("SECRET_NEVER_LEAK");
   });
 
-  it("does not fire before the configured threshold", () => {
+  it("does not fire before the fixed one-hour threshold", () => {
     expect(
       evaluateStopHook({
         stdin: stopInput({ transcript_path: transcriptPath }),
