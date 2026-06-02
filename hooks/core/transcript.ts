@@ -7,6 +7,7 @@ const TIMESTAMP_KEYS = ["timestamp", "created_at", "createdAt", "time", "ts"];
 const TOOL_KEYS = [
   "toolUse",
   "tool_use",
+  "toolCall",
   "toolUseResult",
   "tool_use_result",
   "tool_call",

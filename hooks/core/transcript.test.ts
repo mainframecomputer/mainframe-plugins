@@ -172,6 +172,28 @@ describe("summarizeTranscript", () => {
     expect(summary.workHappened).toBe(false);
   });
 
+  it("treats camel-case toolCall records as work", () => {
+    const summary = summarizeTranscript(
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          role: "user",
+          content: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:05:00.000Z",
+          toolCall: { name: "bash" },
+        }),
+      ].join("\n"),
+    );
+
+    expect(summary).toMatchObject({ kind: "ready" });
+    if (summary.kind !== "ready") {
+      throw new Error("expected a ready transcript summary");
+    }
+    expect(summary.workHappened).toBe(true);
+  });
+
   it("uses a discriminated state when no real user is present", () => {
     expect(summarizeTranscript(JSON.stringify({ type: "assistant", content: "done" }))).toEqual({
       kind: "no-user",
