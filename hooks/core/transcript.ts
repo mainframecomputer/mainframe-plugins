@@ -17,13 +17,7 @@ export type TranscriptSummary =
       alreadyShared: boolean;
     };
 
-type ParsedRecord = {
-  row: CursorTranscriptRow;
-  timestampMs: number | null;
-};
-
 type CursorTranscriptRow =
-  | { event: "assistant_message"; timestamp: unknown }
   | { event: "tool_call"; timestamp: unknown; name: string; output: unknown }
   | { event: "user_message"; timestamp: unknown };
 
@@ -36,23 +30,20 @@ export function summarizeTranscriptFile(path: string): TranscriptSummary {
 }
 
 export function summarizeTranscript(text: string): TranscriptSummary {
-  const records = parseJsonl(text);
-  const lastUserIndex = findLastRealUserIndex(records);
-  if (lastUserIndex === -1) {
+  const summary = summarizeCursorRows(text);
+  if (!summary.sawUser) {
     return { kind: "no-user" };
   }
 
-  const lastUser = records[lastUserIndex];
-  if (lastUser.timestampMs === null) {
+  if (summary.lastUserTimeMs === null) {
     return { kind: "missing-user-time" };
   }
 
-  const recentRecords = records.slice(lastUserIndex + 1);
   return {
     kind: "ready",
-    lastUserTimeMs: lastUser.timestampMs,
-    workHappened: recentRecords.some(({ row }) => row.event === "tool_call"),
-    alreadyShared: recentRecords.some(({ row }) => isMainframeShareRow(row)),
+    lastUserTimeMs: summary.lastUserTimeMs,
+    workHappened: summary.workHappened,
+    alreadyShared: summary.alreadyShared,
   };
 }
 
@@ -81,8 +72,16 @@ function parseTimestampMs(value: unknown): number | null {
   return null;
 }
 
-function parseJsonl(text: string): ParsedRecord[] {
-  const parsedRecords: ParsedRecord[] = [];
+function summarizeCursorRows(text: string): {
+  sawUser: boolean;
+  lastUserTimeMs: number | null;
+  workHappened: boolean;
+  alreadyShared: boolean;
+} {
+  let sawUser = false;
+  let lastUserTimeMs: number | null = null;
+  let workHappened = false;
+  let alreadyShared = false;
 
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
@@ -97,31 +96,31 @@ function parseJsonl(text: string): ParsedRecord[] {
       }
 
       const row = parseCursorTranscriptRow(parsed);
-      if (row !== null) {
-        parsedRecords.push({ row, timestampMs: parseTimestampMs(row.timestamp) });
+      if (row === null) {
+        continue;
+      }
+
+      if (row.event === "user_message") {
+        sawUser = true;
+        lastUserTimeMs = parseTimestampMs(row.timestamp);
+        workHappened = false;
+        alreadyShared = false;
+        continue;
+      }
+
+      if (sawUser) {
+        workHappened = true;
+        alreadyShared = alreadyShared || isMainframeShareRow(row);
       }
     } catch {
       continue;
     }
   }
 
-  return parsedRecords;
-}
-
-function findLastRealUserIndex(records: ParsedRecord[]): number {
-  for (let index = records.length - 1; index >= 0; index -= 1) {
-    if (records[index].row.event === "user_message") {
-      return index;
-    }
-  }
-
-  return -1;
+  return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
 }
 
 function parseCursorTranscriptRow(record: JsonRecord): CursorTranscriptRow | null {
-  if (record.event === "assistant_message") {
-    return { event: record.event, timestamp: record.timestamp };
-  }
   if (record.event === "user_message") {
     return { event: record.event, timestamp: record.timestamp };
   }

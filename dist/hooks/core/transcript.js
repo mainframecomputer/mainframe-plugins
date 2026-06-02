@@ -12,21 +12,18 @@ export function summarizeTranscriptFile(path) {
     }
 }
 export function summarizeTranscript(text) {
-    const records = parseJsonl(text);
-    const lastUserIndex = findLastRealUserIndex(records);
-    if (lastUserIndex === -1) {
+    const summary = summarizeCursorRows(text);
+    if (!summary.sawUser) {
         return { kind: "no-user" };
     }
-    const lastUser = records[lastUserIndex];
-    if (lastUser.timestampMs === null) {
+    if (summary.lastUserTimeMs === null) {
         return { kind: "missing-user-time" };
     }
-    const recentRecords = records.slice(lastUserIndex + 1);
     return {
         kind: "ready",
-        lastUserTimeMs: lastUser.timestampMs,
-        workHappened: recentRecords.some(({ row }) => row.event === "tool_call"),
-        alreadyShared: recentRecords.some(({ row }) => isMainframeShareRow(row)),
+        lastUserTimeMs: summary.lastUserTimeMs,
+        workHappened: summary.workHappened,
+        alreadyShared: summary.alreadyShared,
     };
 }
 function parseTimestampMs(value) {
@@ -49,8 +46,11 @@ function parseTimestampMs(value) {
     }
     return null;
 }
-function parseJsonl(text) {
-    const parsedRecords = [];
+function summarizeCursorRows(text) {
+    let sawUser = false;
+    let lastUserTimeMs = null;
+    let workHappened = false;
+    let alreadyShared = false;
     for (const line of text.split(/\r?\n/)) {
         const trimmed = line.trim();
         if (trimmed === "") {
@@ -62,28 +62,28 @@ function parseJsonl(text) {
                 continue;
             }
             const row = parseCursorTranscriptRow(parsed);
-            if (row !== null) {
-                parsedRecords.push({ row, timestampMs: parseTimestampMs(row.timestamp) });
+            if (row === null) {
+                continue;
+            }
+            if (row.event === "user_message") {
+                sawUser = true;
+                lastUserTimeMs = parseTimestampMs(row.timestamp);
+                workHappened = false;
+                alreadyShared = false;
+                continue;
+            }
+            if (sawUser) {
+                workHappened = true;
+                alreadyShared = alreadyShared || isMainframeShareRow(row);
             }
         }
         catch {
             continue;
         }
     }
-    return parsedRecords;
-}
-function findLastRealUserIndex(records) {
-    for (let index = records.length - 1; index >= 0; index -= 1) {
-        if (records[index].row.event === "user_message") {
-            return index;
-        }
-    }
-    return -1;
+    return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
 }
 function parseCursorTranscriptRow(record) {
-    if (record.event === "assistant_message") {
-        return { event: record.event, timestamp: record.timestamp };
-    }
     if (record.event === "user_message") {
         return { event: record.event, timestamp: record.timestamp };
     }

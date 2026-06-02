@@ -1,5 +1,15 @@
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+} from "node:fs";
 import { spawnSync } from "node:child_process";
+import { basename, dirname, join } from "node:path";
+import { tmpdir } from "node:os";
 
 import { z } from "zod";
 
@@ -22,6 +32,10 @@ const pluginManifest = PluginManifestSchema.parse(
 );
 const archiveName = `${packageJson.name.replace(/^@/, "").replace("/", "-")}-${packageJson.version}.tgz`;
 const archivePath = `release/${archiveName}`;
+const tempRoot = mkdtempSync(join(tmpdir(), "mainframe-plugin-release-"));
+const payloadDir = join(tempRoot, "payload");
+const tempArchivePath = join(tempRoot, archiveName);
+let tarExitCode = 0;
 
 const paths = ["package.json", ...packageJson.files];
 const manifestPaths = [
@@ -41,14 +55,38 @@ for (const path of manifestPaths) {
 }
 
 mkdirSync("release", { recursive: true });
+mkdirSync(payloadDir, { recursive: true });
 
-const result = spawnSync(
-  "tar",
-  ["-czhf", archivePath, "--exclude", ".DS_Store", "--exclude", "*/.DS_Store", ...paths],
-  { stdio: "inherit" },
-);
-if (result.status !== 0) {
-  process.exit(result.status ?? 1);
+try {
+  for (const path of paths) {
+    const destination = join(payloadDir, path);
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(path, destination, {
+      dereference: true,
+      errorOnExist: false,
+      filter: (source) => basename(source) !== ".DS_Store",
+      force: true,
+      recursive: true,
+    });
+  }
+
+  const result = spawnSync(
+    "tar",
+    ["-czhf", tempArchivePath, "--exclude", ".DS_Store", "--exclude", "*/.DS_Store", ...paths],
+    { cwd: payloadDir, stdio: "inherit" },
+  );
+  if (result.status !== 0) {
+    tarExitCode = result.status ?? 1;
+  } else {
+    mkdirSync(dirname(archivePath), { recursive: true });
+    renameSync(tempArchivePath, archivePath);
+  }
+} finally {
+  rmSync(tempRoot, { force: true, recursive: true });
+}
+
+if (tarExitCode !== 0) {
+  process.exit(tarExitCode);
 }
 
 console.log(archivePath);
