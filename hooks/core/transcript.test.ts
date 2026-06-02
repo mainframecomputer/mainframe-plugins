@@ -89,6 +89,34 @@ describe("summarizeTranscript", () => {
     expect(summary.alreadyShared).toBe(true);
   });
 
+  it("detects Mainframe shares in tool_calls arrays", () => {
+    const summary = summarizeTranscript(
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          role: "user",
+          content: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:30:00.000Z",
+          tool_calls: [
+            {
+              name: "generate_video",
+              output: { watchUrl: "https://mainframe.app/watch/abc" },
+            },
+          ],
+        }),
+      ].join("\n"),
+    );
+
+    expect(summary).toMatchObject({ kind: "ready" });
+    if (summary.kind !== "ready") {
+      throw new Error("expected a ready transcript summary");
+    }
+    expect(summary.workHappened).toBe(true);
+    expect(summary.alreadyShared).toBe(true);
+  });
+
   it("does not treat a share-video mention as an existing Mainframe share", () => {
     const summary = summarizeTranscript(
       [

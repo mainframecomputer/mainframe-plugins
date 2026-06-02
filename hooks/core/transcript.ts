@@ -32,6 +32,7 @@ const TOOL_PAYLOAD_KEYS = [
   "tool_use",
   "toolUseResult",
   "tool_use_result",
+  "tool_calls",
 ];
 const TOOL_OUTPUT_KEYS = ["output", "result", "content"];
 const WATCH_URL_KEYS = new Set(["watchUrl", "watch_url"]);
