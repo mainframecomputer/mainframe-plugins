@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { isJsonRecord } from "./json.js";
 const SECONDS_TIMESTAMP_CUTOFF = 1_000_000_000_000;
 const TIMESTAMP_KEYS = ["timestamp", "created_at", "createdAt", "time", "ts"];
-const TOOL_KEYS = [
+const TOOL_RECORD_KEYS = [
     "toolUse",
     "tool_use",
     "toolCall",
@@ -23,15 +23,6 @@ const TOOL_NAME_MARKERS = [
 ];
 const USER_EVENTS = new Set(["user_message", "user-prompt", "userpromptsubmit"]);
 const MAINFRAME_TOOL_NAMES = new Set(["generate_video", "upload_video", "get_video"]);
-const TOOL_PAYLOAD_KEYS = [
-    "tool_call",
-    "toolCall",
-    "toolUse",
-    "tool_use",
-    "toolUseResult",
-    "tool_use_result",
-    "tool_calls",
-];
 const TOOL_OUTPUT_KEYS = ["output", "result", "content"];
 const WATCH_URL_KEYS = new Set(["watchUrl", "watch_url"]);
 export function summarizeTranscriptFile(path) {
@@ -113,7 +104,7 @@ export function isRealUserRecord(record) {
     return USER_EVENTS.has(event);
 }
 export function isWorkRecord(record) {
-    if (hasAnyKey(record, TOOL_KEYS)) {
+    if (hasAnyKey(record, TOOL_RECORD_KEYS)) {
         return true;
     }
     const type = lowerString(record.type);
@@ -186,7 +177,7 @@ function containsToolUse(value) {
     return false;
 }
 function hasMainframeToolPayload(record) {
-    return TOOL_PAYLOAD_KEYS.some((key) => {
+    return TOOL_RECORD_KEYS.some((key) => {
         const value = record[key];
         if (Array.isArray(value)) {
             return value.some((entry) => isJsonRecord(entry) && hasMainframeToolEvidence(entry));
