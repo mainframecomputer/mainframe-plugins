@@ -106,12 +106,7 @@ function updatePackageJson(): void {
     "README.md",
     "assets/logo.png",
     "dist",
-    "hooks/core/afk-gate.ts",
-    "hooks/core/json.ts",
-    "hooks/core/subprocess.ts",
-    "hooks/core/transcript.ts",
     "hooks/cursor/hooks.json",
-    "hooks/cursor/stop.ts",
     "skills",
   ];
 

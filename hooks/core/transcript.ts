@@ -1,8 +1,7 @@
-import { closeSync, openSync, readFileSync, readSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 import { isJsonRecord, type JsonRecord } from "./json.js";
 
-const TAIL_BYTES = 64 * 1024;
 const SECONDS_TIMESTAMP_CUTOFF = 1_000_000_000_000;
 const TIMESTAMP_KEYS = ["timestamp", "created_at", "createdAt", "time", "ts"];
 const TOOL_KEYS = [
@@ -24,14 +23,17 @@ const TOOL_NAME_MARKERS = [
   "command",
 ];
 const USER_EVENTS = new Set(["user_message", "user-prompt", "userpromptsubmit"]);
-const MAINFRAME_MARKERS = [
-  "generate_video",
-  "upload_video",
-  "get_video",
-  "mainframe.app/watch",
-  "watchurl",
-  "share-video",
+const MAINFRAME_TOOL_NAMES = new Set(["generate_video", "upload_video", "get_video"]);
+const TOOL_PAYLOAD_KEYS = [
+  "tool_call",
+  "toolCall",
+  "toolUse",
+  "tool_use",
+  "toolUseResult",
+  "tool_use_result",
 ];
+const TOOL_OUTPUT_KEYS = ["output", "result", "content"];
+const WATCH_URL_KEYS = new Set(["watchUrl", "watch_url"]);
 
 export type TranscriptSummary =
   | { kind: "unreadable" }
@@ -51,7 +53,7 @@ type ParsedRecord = {
 
 export function summarizeTranscriptFile(path: string): TranscriptSummary {
   try {
-    return summarizeTranscript(readFileTail(path, TAIL_BYTES));
+    return summarizeTranscript(readFileSync(path, "utf8"));
   } catch {
     return { kind: "unreadable" };
   }
@@ -162,7 +164,11 @@ export function isWorkRecord(record: JsonRecord): boolean {
 }
 
 export function isMainframeShareRecord(record: JsonRecord): boolean {
-  return containsMainframeMarker(record);
+  return (
+    hasMainframeToolName(record, false) ||
+    hasMainframeToolPayload(record) ||
+    hasMainframeOutput(record)
+  );
 }
 
 function parseJsonl(text: string): ParsedRecord[] {
@@ -195,22 +201,6 @@ function findLastRealUserIndex(records: ParsedRecord[]): number {
   }
 
   return -1;
-}
-
-function readFileTail(path: string, maxBytes: number): string {
-  const size = statSync(path).size;
-  if (size <= maxBytes) {
-    return readFileSync(path, "utf8");
-  }
-
-  const fd = openSync(path, "r");
-  try {
-    const buffer = Buffer.alloc(maxBytes);
-    readSync(fd, buffer, 0, maxBytes, size - maxBytes);
-    return buffer.toString("utf8");
-  } finally {
-    closeSync(fd);
-  }
 }
 
 function lowerString(value: unknown): string {
@@ -246,18 +236,56 @@ function containsToolUse(value: unknown): boolean {
   return false;
 }
 
-function containsMainframeMarker(value: unknown): boolean {
+function hasMainframeToolPayload(record: JsonRecord): boolean {
+  return TOOL_PAYLOAD_KEYS.some((key) => {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      return value.some((entry) => isJsonRecord(entry) && hasMainframeToolEvidence(entry));
+    }
+    return isJsonRecord(value) && hasMainframeToolEvidence(value);
+  });
+}
+
+function hasMainframeToolEvidence(record: JsonRecord): boolean {
+  return (
+    hasMainframeToolName(record, true) ||
+    hasMainframeToolPayload(record) ||
+    hasMainframeOutput(record)
+  );
+}
+
+function hasMainframeToolName(record: JsonRecord, includeGenericName: boolean): boolean {
+  const name = lowerString(
+    includeGenericName
+      ? (record.tool_name ?? record.toolName ?? record.name)
+      : (record.tool_name ?? record.toolName),
+  );
+  return MAINFRAME_TOOL_NAMES.has(name);
+}
+
+function hasMainframeOutput(record: JsonRecord): boolean {
+  return TOOL_OUTPUT_KEYS.some((key) => hasMainframeWatchUrl(record[key]));
+}
+
+function hasMainframeWatchUrl(value: unknown): boolean {
   if (typeof value === "string") {
-    const haystack = value.toLowerCase();
-    return MAINFRAME_MARKERS.some((marker) => haystack.includes(marker));
+    return value.startsWith("https://mainframe.app/watch/");
   }
 
   if (Array.isArray(value)) {
-    return value.some((entry) => containsMainframeMarker(entry));
+    return value.some((entry) => hasMainframeWatchUrl(entry));
   }
 
   if (isJsonRecord(value)) {
-    return Object.values(value).some((entry) => containsMainframeMarker(entry));
+    return Object.entries(value).some(([key, entry]) => {
+      if (WATCH_URL_KEYS.has(key)) {
+        return hasMainframeWatchUrl(entry);
+      }
+      if (TOOL_OUTPUT_KEYS.includes(key)) {
+        return hasMainframeWatchUrl(entry);
+      }
+      return false;
+    });
   }
 
   return false;

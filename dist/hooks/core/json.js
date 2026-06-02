@@ -10,4 +10,3 @@ export function parseJsonRecord(text) {
         return null;
     }
 }
-//# sourceMappingURL=json.js.map

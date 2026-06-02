@@ -89,6 +89,66 @@ describe("summarizeTranscript", () => {
     expect(summary.alreadyShared).toBe(true);
   });
 
+  it("does not treat a share-video mention as an existing Mainframe share", () => {
+    const summary = summarizeTranscript(
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          role: "user",
+          content: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:05:00.000Z",
+          tool_call: { name: "shell" },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:30:00.000Z",
+          role: "assistant",
+          content: "Maybe use share-video later.",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:31:00.000Z",
+          type: "model",
+          name: "generate_video",
+        }),
+      ].join("\n"),
+    );
+
+    expect(summary).toMatchObject({ kind: "ready" });
+    if (summary.kind !== "ready") {
+      throw new Error("expected a ready transcript summary");
+    }
+    expect(summary.workHappened).toBe(true);
+    expect(summary.alreadyShared).toBe(false);
+  });
+
+  it("summarizes full transcripts instead of only a byte tail", () => {
+    const summary = summarizeTranscript(
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          role: "user",
+          content: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:05:00.000Z",
+          tool_call: { name: "shell" },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:30:00.000Z",
+          role: "assistant",
+          content: "x".repeat(70_000),
+        }),
+      ].join("\n"),
+    );
+
+    expect(summary).toMatchObject({
+      kind: "ready",
+      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
+      workHappened: true,
+    });
+  });
+
   it("does not treat generic record names as tool work", () => {
     const summary = summarizeTranscript(
       [

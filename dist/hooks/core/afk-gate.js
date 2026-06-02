@@ -17,4 +17,3 @@ export function evaluateAfkGate(input) {
         reason: `The user has been away for about ${elapsedHours} hours while you worked. Consider using the share-video skill to leave a short Mainframe video summarizing what you did, then stop.`,
     };
 }
-//# sourceMappingURL=afk-gate.js.map

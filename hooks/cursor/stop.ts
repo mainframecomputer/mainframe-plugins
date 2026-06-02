@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-import { runStopHookCli } from "../core/subprocess.js";
+import { runCursorStopHookCli } from "./stop-evaluator.js";
 
-runStopHookCli();
+runCursorStopHookCli();
