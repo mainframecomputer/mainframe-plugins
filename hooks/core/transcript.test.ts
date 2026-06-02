@@ -55,6 +55,29 @@ describe("summarizeTranscript", () => {
     expect(summary.workHappened).toBe(true);
   });
 
+  it("treats nested object-style tool content inside arrays as work", () => {
+    const summary = summarizeTranscript(
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          role: "user",
+          content: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:05:00.000Z",
+          role: "assistant",
+          content: [{ content: { type: "tool_use", name: "Bash" } }],
+        }),
+      ].join("\n"),
+    );
+
+    expect(summary).toMatchObject({ kind: "ready" });
+    if (summary.kind !== "ready") {
+      throw new Error("expected a ready transcript summary");
+    }
+    expect(summary.workHappened).toBe(true);
+  });
+
   it("does not treat object-style tool results as the last external user", () => {
     const summary = summarizeTranscript(
       [

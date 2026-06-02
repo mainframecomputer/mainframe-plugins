@@ -166,12 +166,7 @@ function hasAnyKey(record, keys) {
 }
 function containsToolUse(value) {
     if (Array.isArray(value)) {
-        return value.some((entry) => {
-            if (!isJsonRecord(entry)) {
-                return false;
-            }
-            return isToolUseLikeRecord(entry);
-        });
+        return value.some((entry) => containsToolUse(entry));
     }
     if (isJsonRecord(value)) {
         return isToolUseLikeRecord(value) || containsToolUse(value.content);
