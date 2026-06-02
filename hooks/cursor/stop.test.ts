@@ -43,6 +43,15 @@ describe("Cursor stop hook", () => {
     }
   });
 
+  it("does not fire for non-stop hook events", () => {
+    expect(
+      evaluateCursorStopHook({
+        stdin: stopInput({ hook_event_name: "pre-submit", transcript_path: transcriptPath }),
+        nowMs: stopTimeMs,
+      }),
+    ).toEqual({});
+  });
+
   it("does not fire after an automatic followup already looped", () => {
     expect(
       evaluateCursorStopHook({

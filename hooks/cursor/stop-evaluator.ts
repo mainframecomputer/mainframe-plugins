@@ -35,7 +35,7 @@ export function runCursorStopHookCli(): void {
 
 function parseCursorStopInput(stdin: string): { transcriptPath: string; loopCount: number } | null {
   const input = parseJsonRecord(stdin);
-  if (input === null || input.status !== "completed") {
+  if (input === null || input.hook_event_name !== "stop" || input.status !== "completed") {
     return null;
   }
 

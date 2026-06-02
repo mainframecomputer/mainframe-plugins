@@ -1,6 +1,7 @@
 import {
   cpSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -62,9 +63,16 @@ try {
     const destination = join(payloadDir, path);
     mkdirSync(dirname(destination), { recursive: true });
     cpSync(path, destination, {
-      dereference: true,
       errorOnExist: false,
-      filter: (source) => basename(source) !== ".DS_Store",
+      filter: (source) => {
+        if (basename(source) === ".DS_Store") {
+          return false;
+        }
+        if (lstatSync(source).isSymbolicLink()) {
+          throw new Error(`Package path must not be a symlink: ${source}`);
+        }
+        return true;
+      },
       force: true,
       recursive: true,
     });
@@ -72,7 +80,7 @@ try {
 
   const result = spawnSync(
     "tar",
-    ["-czhf", tempArchivePath, "--exclude", ".DS_Store", "--exclude", "*/.DS_Store", ...paths],
+    ["-czf", tempArchivePath, "--exclude", ".DS_Store", "--exclude", "*/.DS_Store", ...paths],
     { cwd: payloadDir, stdio: "inherit" },
   );
   if (result.status !== 0) {

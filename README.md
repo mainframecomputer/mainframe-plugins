@@ -1,6 +1,6 @@
 # Mainframe for Cursor
 
-Mainframe helps coding agents leave short video updates when they finish meaningful work.
+Mainframe helps coding agents leave short video updates when they finish tool-assisted work.
 
 This Cursor plugin adds:
 
