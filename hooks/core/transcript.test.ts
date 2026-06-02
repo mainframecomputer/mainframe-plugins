@@ -3,25 +3,26 @@ import { describe, expect, it } from "vitest";
 import { summarizeTranscript, summarizeTranscriptFile } from "./transcript.js";
 
 describe("summarizeTranscript", () => {
-  it("summarizes recent work after the last real user message", () => {
+  it("summarizes Cursor tool work after the last user message", () => {
     const summary = summarizeTranscript(
-      [
-        JSON.stringify({
+      cursorTranscript([
+        {
           timestamp: "2026-05-08T12:00:00.000Z",
-          type: "user",
-          message: { role: "user", content: "earlier request" },
-        }),
-        JSON.stringify({
+          event: "user_message",
+          text: "earlier request",
+        },
+        {
           timestamp: "2026-05-08T13:00:00.000Z",
-          type: "user",
-          message: { role: "user", content: "final request" },
-        }),
-        JSON.stringify({
+          event: "user_message",
+          text: "final request",
+        },
+        {
           timestamp: "2026-05-08T13:05:00.000Z",
-          type: "assistant",
-          content: [{ type: "tool_use", name: "bash" }],
-        }),
-      ].join("\n"),
+          event: "tool_call",
+          name: "shell",
+          args: { command: "bun run build" },
+        },
+      ]),
     );
 
     expect(summary).toEqual({
@@ -32,272 +33,79 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("treats object-style tool content as work", () => {
+  it("detects an existing Mainframe share from Cursor tool output", () => {
     const summary = summarizeTranscript(
-      [
-        JSON.stringify({
+      cursorTranscript([
+        {
           timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:05:00.000Z",
-          role: "assistant",
-          content: { type: "tool_use", name: "Bash" },
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
-  });
-
-  it("treats nested object-style tool content inside arrays as work", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:05:00.000Z",
-          role: "assistant",
-          content: [{ content: { type: "tool_use", name: "Bash" } }],
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
-  });
-
-  it("does not treat object-style tool results as the last external user", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "actual user",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:10:00.000Z",
-          role: "user",
-          content: { type: "tool_result", content: "tool result" },
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:15:00.000Z",
-          role: "assistant",
-          content: { type: "tool_use", name: "Bash" },
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({
-      kind: "ready",
-      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
-      workHappened: true,
-    });
-  });
-
-  it("does not treat nested-array tool results as the last external user", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "actual user",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:10:00.000Z",
-          role: "user",
-          content: [[{ type: "tool_result", content: "tool result" }]],
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:15:00.000Z",
-          role: "assistant",
-          content: { type: "tool_use", name: "Bash" },
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({
-      kind: "ready",
-      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
-      workHappened: true,
-    });
-  });
-
-  it("does not treat tool-result user records as the last external user", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          type: "user",
-          message: { role: "user", content: "actual user" },
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:10:00.000Z",
-          type: "user",
-          toolUseResult: { content: "tool result" },
-          message: { role: "user" },
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:15:00.000Z",
-          tool_use_result: { name: "bash" },
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({
-      kind: "ready",
-      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
-    });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
-  });
-
-  it("detects an existing Mainframe share after the user message", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
+          event: "user_message",
+          text: "please work on this",
+        },
+        {
           timestamp: "2026-05-08T13:30:00.000Z",
-          tool_call: {
-            name: "generate_video",
-            output: { watchUrl: "https://mainframe.app/watch/abc" },
-          },
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
-    expect(summary.alreadyShared).toBe(true);
-  });
-
-  it("detects Mainframe shares in tool_calls arrays", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:30:00.000Z",
-          tool_calls: [
-            {
-              name: "generate_video",
-              output: { watchUrl: "https://mainframe.app/watch/abc" },
-            },
-          ],
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
-    expect(summary.alreadyShared).toBe(true);
-  });
-
-  it("bounds nested tool payload inspection", () => {
-    let nested: Record<string, unknown> = { name: "generate_video" };
-    for (let index = 0; index < 50; index += 1) {
-      nested = { toolCall: nested };
-    }
-
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:30:00.000Z",
-          toolCall: nested,
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
-    expect(summary.alreadyShared).toBe(false);
-  });
-
-  it("does not treat a share-video mention as an existing Mainframe share", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:05:00.000Z",
-          tool_call: { name: "shell" },
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:30:00.000Z",
-          role: "assistant",
-          content: "Maybe use share-video later.",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:31:00.000Z",
-          type: "model",
+          event: "tool_call",
           name: "generate_video",
-        }),
-      ].join("\n"),
+          output: { watchUrl: "https://mainframe.app/watch/abc" },
+        },
+      ]),
     );
 
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
-    expect(summary.alreadyShared).toBe(false);
+    expect(summary).toMatchObject({
+      kind: "ready",
+      workHappened: true,
+      alreadyShared: true,
+    });
+  });
+
+  it("ignores Mainframe mentions without explicit Cursor tool output", () => {
+    const summary = summarizeTranscript(
+      cursorTranscript([
+        {
+          timestamp: "2026-05-08T13:00:00.000Z",
+          event: "user_message",
+          text: "please work on this",
+        },
+        {
+          timestamp: "2026-05-08T13:05:00.000Z",
+          event: "tool_call",
+          name: "shell",
+          args: { command: "echo done" },
+        },
+        {
+          timestamp: "2026-05-08T13:30:00.000Z",
+          event: "assistant_message",
+          text: "Maybe use share-video later: https://mainframe.app/watch/not-real",
+        },
+      ]),
+    );
+
+    expect(summary).toMatchObject({
+      kind: "ready",
+      workHappened: true,
+      alreadyShared: false,
+    });
   });
 
   it("summarizes full transcripts instead of only a byte tail", () => {
     const summary = summarizeTranscript(
-      [
-        JSON.stringify({
+      cursorTranscript([
+        {
           timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
+          event: "user_message",
+          text: "please work on this",
+        },
+        {
           timestamp: "2026-05-08T13:05:00.000Z",
-          tool_call: { name: "shell" },
-        }),
-        JSON.stringify({
+          event: "tool_call",
+          name: "shell",
+          args: { command: "bun run build" },
+        },
+        {
           timestamp: "2026-05-08T13:30:00.000Z",
-          role: "assistant",
-          content: "x".repeat(70_000),
-        }),
-      ].join("\n"),
+          event: "assistant_message",
+          text: "x".repeat(70_000),
+        },
+      ]),
     );
 
     expect(summary).toMatchObject({
@@ -307,53 +115,28 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("does not treat generic record names as tool work", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:05:00.000Z",
-          name: "command-r-plus",
-          type: "model",
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(false);
-  });
-
-  it("treats camel-case toolCall records as work", () => {
-    const summary = summarizeTranscript(
-      [
-        JSON.stringify({
-          timestamp: "2026-05-08T13:00:00.000Z",
-          role: "user",
-          content: "please work on this",
-        }),
-        JSON.stringify({
-          timestamp: "2026-05-08T13:05:00.000Z",
-          toolCall: { name: "bash" },
-        }),
-      ].join("\n"),
-    );
-
-    expect(summary).toMatchObject({ kind: "ready" });
-    if (summary.kind !== "ready") {
-      throw new Error("expected a ready transcript summary");
-    }
-    expect(summary.workHappened).toBe(true);
+  it("does not treat non-Cursor transcript shapes as user or work rows", () => {
+    expect(
+      summarizeTranscript(
+        [
+          JSON.stringify({
+            timestamp: "2026-05-08T13:00:00.000Z",
+            role: "user",
+            content: "please work on this",
+          }),
+          JSON.stringify({
+            timestamp: "2026-05-08T13:05:00.000Z",
+            content: { type: "tool_use", name: "Bash" },
+          }),
+        ].join("\n"),
+      ),
+    ).toEqual({ kind: "no-user" });
   });
 
   it("uses a discriminated state when no real user is present", () => {
-    expect(summarizeTranscript(JSON.stringify({ type: "assistant", content: "done" }))).toEqual({
+    expect(
+      summarizeTranscript(JSON.stringify({ event: "assistant_message", text: "done" })),
+    ).toEqual({
       kind: "no-user",
     });
   });
@@ -364,3 +147,7 @@ describe("summarizeTranscript", () => {
     });
   });
 });
+
+function cursorTranscript(rows: Array<Record<string, unknown>>): string {
+  return rows.map((row) => JSON.stringify(row)).join("\n");
+}

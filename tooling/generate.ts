@@ -101,7 +101,6 @@ function updatePackageJson(): void {
   packageJson.files = [
     ".cursor-plugin",
     ".mcp.json",
-    "AGENTS.md",
     "LICENSE",
     "README.md",
     "assets/logo.png",

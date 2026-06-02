@@ -22,7 +22,6 @@
   "files": [
     ".cursor-plugin",
     ".mcp.json",
-    "AGENTS.md",
     "LICENSE",
     "README.md",
     "assets/logo.png",
@@ -36,7 +35,7 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json && bun tooling/mark-executable.ts",
     "generate": "bun tooling/generate.ts && oxfmt --write package.json .cursor-plugin",
     "check:generated": "bun tooling/generated-drift-check.ts",
-    "archive:release": "bun tooling/release-archive.ts",
+    "archive:release": "bun run generate && bun run build && git diff --exit-code -- package.json .cursor-plugin dist && bun tooling/release-archive.ts",
     "pack:release": "bun run verify && bun run archive:release",
     "lint": "oxlint . --deny-warnings --report-unused-disable-directives",
     "lint:fix": "oxlint . --fix",
@@ -48,7 +47,6 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.1",
     "@types/node": "^22.15.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.3",
