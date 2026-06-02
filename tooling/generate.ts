@@ -3,7 +3,7 @@ import { dirname } from "node:path";
 
 import { z } from "zod";
 
-const JsonObjectSchema = z.record(z.string(), z.unknown());
+const JsonRecordSchema = z.record(z.string(), z.unknown());
 
 const MetadataSchema = z.object({
   name: z.string().min(1),
@@ -83,7 +83,7 @@ function marketplace() {
 }
 
 function updatePackageJson(): void {
-  const packageJson = JsonObjectSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
+  const packageJson = JsonRecordSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
   packageJson.name = metadata.packageName;
   packageJson.version = metadata.version;
   packageJson.description = "Mainframe Cursor plugin manifest, skill, MCP wiring, and stop hook.";

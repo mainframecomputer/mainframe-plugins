@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { evaluateAfkGate } from "./afk-gate.js";
-import { parseJsonObject, type JsonObject } from "./json.js";
+import { parseJsonRecord, type JsonRecord } from "./json.js";
 import { summarizeTranscriptFile } from "./transcript.js";
 
 export type StopHookEvaluationInput = {
@@ -23,7 +23,7 @@ export function evaluateStopHook(input: StopHookEvaluationInput): StopHookOutput
 }
 
 function evaluateStopHookDecision(input: StopHookEvaluationInput): StopHookDecision {
-  const hookInput = parseJsonObject(input.stdin);
+  const hookInput = parseJsonRecord(input.stdin);
   if (hookInput === null || hookInput.status !== "completed" || readLoopCount(hookInput) > 0) {
     return { kind: "skip" };
   }
@@ -58,7 +58,7 @@ export function runStopHookCli(): void {
   process.stdout.write(`${JSON.stringify(output)}\n`);
 }
 
-function readTranscriptPath(input: JsonObject): string | null {
+function readTranscriptPath(input: JsonRecord): string | null {
   const value = input.transcript_path;
   if (typeof value === "string") {
     return value;
@@ -67,7 +67,7 @@ function readTranscriptPath(input: JsonObject): string | null {
   return null;
 }
 
-function readLoopCount(input: JsonObject): number {
+function readLoopCount(input: JsonRecord): number {
   const value = input.loop_count;
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }

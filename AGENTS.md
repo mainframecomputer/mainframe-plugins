@@ -1,11 +1,13 @@
-# Agent Notes
+# Agent notes
 
-This repository is public-facing plugin packaging for Mainframe.
+This repository packages the Mainframe Cursor plugin. Keep it focused on the Cursor
+manifest, hosted MCP wiring, the `share-video` skill, and the stop hook.
 
-## Repository Boundaries
+## Repository boundaries
 
 - User-visible copy should say "Mainframe", not legacy product names.
 - Do not add secrets, customer data, private URLs, or private business context.
+- Do not add non-Cursor host surfaces unless the product task explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
 - Generated Cursor manifest and marketplace files come from `tooling/generate.ts`; edit
   the config there, then run `bun run generate`.
@@ -14,7 +16,7 @@ This repository is public-facing plugin packaging for Mainframe.
   or extra top-level markdown unless the user asks; improve `README.md` or this
   file instead.
 
-## Start Here
+## Start here
 
 - Read before write. Grep the current implementation before editing. Source
   beats docs; if they disagree, trust source and update the doc you touched.
@@ -28,7 +30,7 @@ This repository is public-facing plugin packaging for Mainframe.
 - Prefer the repo's existing scripts and patterns over inventing new local
   workflows.
 
-## Engineering Principles
+## Engineering principles
 
 - KISS. Prefer explicit control flow over meta-programming or hidden dynamic
   behavior.
@@ -44,7 +46,7 @@ This repository is public-facing plugin packaging for Mainframe.
   proven. Use the same path to verify the fix.
 - Parallelize independent work and avoid avoidable serial waits.
 
-## Types And Data
+## Types and data
 
 - Use Zod at boundaries. Define the schema first and infer the TypeScript type
   from it unless an existing contract owns the shape.
@@ -57,7 +59,7 @@ This repository is public-facing plugin packaging for Mainframe.
   they prove.
 - Comment only on high-level intent that is not obvious from the code.
 
-## Time And Defaults
+## Time and defaults
 
 - TypeScript durations are milliseconds and named accordingly, such as
   `thresholdMs` or `INACTIVITY_TIMEOUT_MS`.

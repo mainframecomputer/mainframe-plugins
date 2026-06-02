@@ -14,7 +14,7 @@ describe("evaluateAfkGate", () => {
     expect(result).toEqual({
       fire: true,
       reason:
-        "The user has been away for about 2.5 hours while you worked. Consider using the share-video skill to leave a short Mainframe video summarizing what you did, then stop. If sensitive content makes a video unwise, ignore this hint and stop normally.",
+        "The user has been away for about 2.5 hours while you worked. Consider using the share-video skill to leave a short Mainframe video summarizing what you did, then stop.",
     });
   });
 

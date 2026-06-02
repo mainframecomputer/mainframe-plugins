@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { evaluateAfkGate } from "./afk-gate.js";
-import { parseJsonObject } from "./json.js";
+import { parseJsonRecord } from "./json.js";
 import { summarizeTranscriptFile } from "./transcript.js";
 export function evaluateStopHook(input) {
     const decision = evaluateStopHookDecision(input);
@@ -10,7 +10,7 @@ export function evaluateStopHook(input) {
     return { followup_message: decision.reason };
 }
 function evaluateStopHookDecision(input) {
-    const hookInput = parseJsonObject(input.stdin);
+    const hookInput = parseJsonRecord(input.stdin);
     if (hookInput === null || hookInput.status !== "completed" || readLoopCount(hookInput) > 0) {
         return { kind: "skip" };
     }

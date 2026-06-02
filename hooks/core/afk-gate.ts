@@ -25,6 +25,6 @@ export function evaluateAfkGate(input: AfkGateInput): AfkGateResult {
   const elapsedHours = (elapsedMs / MS_PER_HOUR).toFixed(1);
   return {
     fire: true,
-    reason: `The user has been away for about ${elapsedHours} hours while you worked. Consider using the share-video skill to leave a short Mainframe video summarizing what you did, then stop. If sensitive content makes a video unwise, ignore this hint and stop normally.`,
+    reason: `The user has been away for about ${elapsedHours} hours while you worked. Consider using the share-video skill to leave a short Mainframe video summarizing what you did, then stop.`,
   };
 }

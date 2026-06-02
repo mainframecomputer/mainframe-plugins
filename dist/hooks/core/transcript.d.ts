@@ -1,4 +1,4 @@
-import { type JsonObject } from "./json.js";
+import { type JsonRecord } from "./json.js";
 export type TranscriptSummary = {
     kind: "unreadable";
 } | {
@@ -14,7 +14,7 @@ export type TranscriptSummary = {
 export declare function summarizeTranscriptFile(path: string): TranscriptSummary;
 export declare function summarizeTranscript(text: string): TranscriptSummary;
 export declare function parseTimestampMs(value: unknown): number | null;
-export declare function extractTimestampMs(record: JsonObject): number | null;
-export declare function isRealUserRecord(record: JsonObject): boolean;
-export declare function isWorkRecord(record: JsonObject): boolean;
-export declare function isMainframeShareRecord(record: JsonObject): boolean;
+export declare function extractTimestampMs(record: JsonRecord): number | null;
+export declare function isRealUserRecord(record: JsonRecord): boolean;
+export declare function isWorkRecord(record: JsonRecord): boolean;
+export declare function isMainframeShareRecord(record: JsonRecord): boolean;

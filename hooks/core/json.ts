@@ -1,13 +1,13 @@
-export type JsonObject = Record<string, unknown>;
+export type JsonRecord = Record<string, unknown>;
 
-export function isJsonObject(value: unknown): value is JsonObject {
+export function isJsonRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function parseJsonObject(text: string): JsonObject | null {
+export function parseJsonRecord(text: string): JsonRecord | null {
   try {
     const parsed: unknown = JSON.parse(text);
-    return isJsonObject(parsed) ? parsed : null;
+    return isJsonRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }

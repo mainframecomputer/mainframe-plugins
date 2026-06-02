@@ -1,8 +1,20 @@
 import { closeSync, openSync, readFileSync, readSync, statSync } from "node:fs";
 
-import { isJsonObject, type JsonObject } from "./json.js";
+import { isJsonRecord, type JsonRecord } from "./json.js";
 
 const TAIL_BYTES = 64 * 1024;
+const SECONDS_TIMESTAMP_CUTOFF = 1_000_000_000_000;
+const TIMESTAMP_KEYS = ["timestamp", "created_at", "createdAt", "time", "ts"];
+const TOOL_KEYS = [
+  "toolUse",
+  "tool_use",
+  "toolUseResult",
+  "tool_use_result",
+  "tool_call",
+  "tool_calls",
+];
+const TOOL_NAME_MARKERS = ["bash", "shell", "exec", "apply_patch", "edit", "write", "read", "command"];
+const USER_EVENTS = new Set(["user_message", "user-prompt", "userpromptsubmit"]);
 const MAINFRAME_MARKERS = [
   "generate_video",
   "upload_video",
@@ -24,7 +36,7 @@ export type TranscriptSummary =
     };
 
 type ParsedRecord = {
-  record: JsonObject;
+  record: JsonRecord;
   timestampMs: number | null;
 };
 
@@ -59,26 +71,31 @@ export function summarizeTranscript(text: string): TranscriptSummary {
 
 export function parseTimestampMs(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return value < 1_000_000_000_000 ? Math.round(value * 1000) : Math.round(value);
+    return normalizeEpochMs(value);
   }
 
   if (typeof value === "string") {
-    const parsed = Date.parse(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
+    const trimmed = value.trim();
+    if (trimmed === "") {
+      return null;
     }
 
-    const numeric = Number(value);
+    const numeric = Number(trimmed);
     if (Number.isFinite(numeric)) {
-      return parseTimestampMs(numeric);
+      return normalizeEpochMs(numeric);
+    }
+
+    const parsed = Date.parse(trimmed);
+    if (Number.isFinite(parsed)) {
+      return parsed;
     }
   }
 
   return null;
 }
 
-export function extractTimestampMs(record: JsonObject): number | null {
-  for (const key of ["timestamp", "created_at", "createdAt", "time", "ts"]) {
+export function extractTimestampMs(record: JsonRecord): number | null {
+  for (const key of TIMESTAMP_KEYS) {
     const timestampMs = parseTimestampMs(record[key]);
     if (timestampMs !== null) {
       return timestampMs;
@@ -86,14 +103,14 @@ export function extractTimestampMs(record: JsonObject): number | null {
   }
 
   const message = record.message;
-  if (isJsonObject(message)) {
+  if (isJsonRecord(message)) {
     return extractTimestampMs(message);
   }
 
   return null;
 }
 
-export function isRealUserRecord(record: JsonObject): boolean {
+export function isRealUserRecord(record: JsonRecord): boolean {
   if ("toolUseResult" in record || "tool_use_result" in record || "tool_result" in record) {
     return false;
   }
@@ -103,7 +120,7 @@ export function isRealUserRecord(record: JsonObject): boolean {
   const role = lowerString(record.role);
   const userType = lowerString(record.userType ?? record.user_type);
   const source = lowerString(record.source);
-  const message = isJsonObject(record.message) ? record.message : null;
+  const message = isJsonRecord(record.message) ? record.message : null;
   const messageRole = message === null ? "" : lowerString(message.role);
 
   if (type === "user" && (userType === "" || userType === "external")) {
@@ -112,20 +129,11 @@ export function isRealUserRecord(record: JsonObject): boolean {
   if (role === "user" || messageRole === "user") {
     return source !== "tool" && source !== "system";
   }
-  return event === "user_message" || event === "user-prompt" || event === "userpromptsubmit";
+  return USER_EVENTS.has(event);
 }
 
-export function isWorkRecord(record: JsonObject): boolean {
-  if (
-    hasAnyKey(record, [
-      "toolUse",
-      "tool_use",
-      "toolUseResult",
-      "tool_use_result",
-      "tool_call",
-      "tool_calls",
-    ])
-  ) {
+export function isWorkRecord(record: JsonRecord): boolean {
+  if (hasAnyKey(record, TOOL_KEYS)) {
     return true;
   }
 
@@ -137,20 +145,15 @@ export function isWorkRecord(record: JsonObject): boolean {
   if (type.includes("tool") || event.includes("tool") || kind.includes("tool")) {
     return true;
   }
-  if (
-    ["bash", "shell", "exec", "apply_patch", "edit", "write", "read", "command"].some((marker) =>
-      toolName.includes(marker),
-    )
-  ) {
+  if (TOOL_NAME_MARKERS.some((marker) => toolName.includes(marker))) {
     return true;
   }
 
-  return arrayContainsToolUse(record.content) || arrayContainsToolUse(record.message);
+  return containsToolUse(record.content) || containsToolUse(record.message);
 }
 
-export function isMainframeShareRecord(record: JsonObject): boolean {
-  const haystack = JSON.stringify(record).toLowerCase();
-  return MAINFRAME_MARKERS.some((marker) => haystack.includes(marker));
+export function isMainframeShareRecord(record: JsonRecord): boolean {
+  return containsMainframeMarker(record);
 }
 
 function parseJsonl(text: string): ParsedRecord[] {
@@ -164,7 +167,7 @@ function parseJsonl(text: string): ParsedRecord[] {
 
     try {
       const parsed: unknown = JSON.parse(trimmed);
-      if (isJsonObject(parsed)) {
+      if (isJsonRecord(parsed)) {
         parsedRecords.push({ record: parsed, timestampMs: extractTimestampMs(parsed) });
       }
     } catch {
@@ -205,14 +208,18 @@ function lowerString(value: unknown): string {
   return typeof value === "string" ? value.toLowerCase() : "";
 }
 
-function hasAnyKey(record: JsonObject, keys: readonly string[]): boolean {
+function normalizeEpochMs(value: number): number {
+  return value < SECONDS_TIMESTAMP_CUTOFF ? Math.round(value * 1000) : Math.round(value);
+}
+
+function hasAnyKey(record: JsonRecord, keys: readonly string[]): boolean {
   return keys.some((key) => key in record);
 }
 
-function arrayContainsToolUse(value: unknown): boolean {
+function containsToolUse(value: unknown): boolean {
   if (Array.isArray(value)) {
     return value.some((entry) => {
-      if (!isJsonObject(entry)) {
+      if (!isJsonRecord(entry)) {
         return false;
       }
       const type = lowerString(entry.type);
@@ -223,8 +230,25 @@ function arrayContainsToolUse(value: unknown): boolean {
     });
   }
 
-  if (isJsonObject(value)) {
-    return arrayContainsToolUse(value.content);
+  if (isJsonRecord(value)) {
+    return containsToolUse(value.content);
+  }
+
+  return false;
+}
+
+function containsMainframeMarker(value: unknown): boolean {
+  if (typeof value === "string") {
+    const haystack = value.toLowerCase();
+    return MAINFRAME_MARKERS.some((marker) => haystack.includes(marker));
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((entry) => containsMainframeMarker(entry));
+  }
+
+  if (isJsonRecord(value)) {
+    return Object.values(value).some((entry) => containsMainframeMarker(entry));
   }
 
   return false;

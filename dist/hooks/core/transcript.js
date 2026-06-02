@@ -1,6 +1,18 @@
 import { closeSync, openSync, readFileSync, readSync, statSync } from "node:fs";
-import { isJsonObject } from "./json.js";
+import { isJsonRecord } from "./json.js";
 const TAIL_BYTES = 64 * 1024;
+const SECONDS_TIMESTAMP_CUTOFF = 1_000_000_000_000;
+const TIMESTAMP_KEYS = ["timestamp", "created_at", "createdAt", "time", "ts"];
+const TOOL_KEYS = [
+    "toolUse",
+    "tool_use",
+    "toolUseResult",
+    "tool_use_result",
+    "tool_call",
+    "tool_calls",
+];
+const TOOL_NAME_MARKERS = ["bash", "shell", "exec", "apply_patch", "edit", "write", "read", "command"];
+const USER_EVENTS = new Set(["user_message", "user-prompt", "userpromptsubmit"]);
 const MAINFRAME_MARKERS = [
     "generate_video",
     "upload_video",
@@ -37,29 +49,33 @@ export function summarizeTranscript(text) {
 }
 export function parseTimestampMs(value) {
     if (typeof value === "number" && Number.isFinite(value)) {
-        return value < 1_000_000_000_000 ? Math.round(value * 1000) : Math.round(value);
+        return normalizeEpochMs(value);
     }
     if (typeof value === "string") {
-        const parsed = Date.parse(value);
+        const trimmed = value.trim();
+        if (trimmed === "") {
+            return null;
+        }
+        const numeric = Number(trimmed);
+        if (Number.isFinite(numeric)) {
+            return normalizeEpochMs(numeric);
+        }
+        const parsed = Date.parse(trimmed);
         if (Number.isFinite(parsed)) {
             return parsed;
-        }
-        const numeric = Number(value);
-        if (Number.isFinite(numeric)) {
-            return parseTimestampMs(numeric);
         }
     }
     return null;
 }
 export function extractTimestampMs(record) {
-    for (const key of ["timestamp", "created_at", "createdAt", "time", "ts"]) {
+    for (const key of TIMESTAMP_KEYS) {
         const timestampMs = parseTimestampMs(record[key]);
         if (timestampMs !== null) {
             return timestampMs;
         }
     }
     const message = record.message;
-    if (isJsonObject(message)) {
+    if (isJsonRecord(message)) {
         return extractTimestampMs(message);
     }
     return null;
@@ -73,7 +89,7 @@ export function isRealUserRecord(record) {
     const role = lowerString(record.role);
     const userType = lowerString(record.userType ?? record.user_type);
     const source = lowerString(record.source);
-    const message = isJsonObject(record.message) ? record.message : null;
+    const message = isJsonRecord(record.message) ? record.message : null;
     const messageRole = message === null ? "" : lowerString(message.role);
     if (type === "user" && (userType === "" || userType === "external")) {
         return true;
@@ -81,17 +97,10 @@ export function isRealUserRecord(record) {
     if (role === "user" || messageRole === "user") {
         return source !== "tool" && source !== "system";
     }
-    return event === "user_message" || event === "user-prompt" || event === "userpromptsubmit";
+    return USER_EVENTS.has(event);
 }
 export function isWorkRecord(record) {
-    if (hasAnyKey(record, [
-        "toolUse",
-        "tool_use",
-        "toolUseResult",
-        "tool_use_result",
-        "tool_call",
-        "tool_calls",
-    ])) {
+    if (hasAnyKey(record, TOOL_KEYS)) {
         return true;
     }
     const type = lowerString(record.type);
@@ -101,14 +110,13 @@ export function isWorkRecord(record) {
     if (type.includes("tool") || event.includes("tool") || kind.includes("tool")) {
         return true;
     }
-    if (["bash", "shell", "exec", "apply_patch", "edit", "write", "read", "command"].some((marker) => toolName.includes(marker))) {
+    if (TOOL_NAME_MARKERS.some((marker) => toolName.includes(marker))) {
         return true;
     }
-    return arrayContainsToolUse(record.content) || arrayContainsToolUse(record.message);
+    return containsToolUse(record.content) || containsToolUse(record.message);
 }
 export function isMainframeShareRecord(record) {
-    const haystack = JSON.stringify(record).toLowerCase();
-    return MAINFRAME_MARKERS.some((marker) => haystack.includes(marker));
+    return containsMainframeMarker(record);
 }
 function parseJsonl(text) {
     const parsedRecords = [];
@@ -119,7 +127,7 @@ function parseJsonl(text) {
         }
         try {
             const parsed = JSON.parse(trimmed);
-            if (isJsonObject(parsed)) {
+            if (isJsonRecord(parsed)) {
                 parsedRecords.push({ record: parsed, timestampMs: extractTimestampMs(parsed) });
             }
         }
@@ -155,13 +163,16 @@ function readFileTail(path, maxBytes) {
 function lowerString(value) {
     return typeof value === "string" ? value.toLowerCase() : "";
 }
+function normalizeEpochMs(value) {
+    return value < SECONDS_TIMESTAMP_CUTOFF ? Math.round(value * 1000) : Math.round(value);
+}
 function hasAnyKey(record, keys) {
     return keys.some((key) => key in record);
 }
-function arrayContainsToolUse(value) {
+function containsToolUse(value) {
     if (Array.isArray(value)) {
         return value.some((entry) => {
-            if (!isJsonObject(entry)) {
+            if (!isJsonRecord(entry)) {
                 return false;
             }
             const type = lowerString(entry.type);
@@ -169,8 +180,21 @@ function arrayContainsToolUse(value) {
             return (type.includes("tool") || name.includes("tool") || name === "bash" || name === "apply_patch");
         });
     }
-    if (isJsonObject(value)) {
-        return arrayContainsToolUse(value.content);
+    if (isJsonRecord(value)) {
+        return containsToolUse(value.content);
+    }
+    return false;
+}
+function containsMainframeMarker(value) {
+    if (typeof value === "string") {
+        const haystack = value.toLowerCase();
+        return MAINFRAME_MARKERS.some((marker) => haystack.includes(marker));
+    }
+    if (Array.isArray(value)) {
+        return value.some((entry) => containsMainframeMarker(entry));
+    }
+    if (isJsonRecord(value)) {
+        return Object.values(value).some((entry) => containsMainframeMarker(entry));
     }
     return false;
 }
