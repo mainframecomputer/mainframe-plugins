@@ -62,8 +62,10 @@ describe("package runtime surface", () => {
 
   it("ships only the expected Cursor plugin files", () => {
     const packageJson = PackageSchema.parse(readJson("package.json"));
+    const shippedFiles = packageJson.files.flatMap(readPackageFiles);
 
-    expect([...packageJson.files.flatMap(readPackageFiles)].sort()).toEqual(SHIPPED_FILES);
+    expect(shippedFiles).toHaveLength(SHIPPED_FILES.length);
+    expect(new Set(shippedFiles)).toEqual(new Set(SHIPPED_FILES));
   });
 
   it("ships the executable Cursor hook runtime referenced by hooks.json and package bin", () => {
@@ -111,9 +113,7 @@ function readPackageFiles(path: string): string[] {
     return [path];
   }
 
-  return readdirSync(path)
-    .flatMap((entry) => readPackageFiles(join(path, entry)))
-    .sort();
+  return readdirSync(path).flatMap((entry) => readPackageFiles(join(path, entry)));
 }
 
 function expectPackagePathHasNoSymlink(path: string): void {
