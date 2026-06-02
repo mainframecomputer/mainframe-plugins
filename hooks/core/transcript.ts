@@ -24,7 +24,7 @@ export type TranscriptSummary =
 
 type CursorTranscriptRow =
   | { event: "assistant_message" }
-  | { event: "tool_call" }
+  | { event: "tool_call"; timestamp: unknown }
   | { event: "tool_result" }
   | { event: "user_message"; timestamp: unknown };
 
@@ -138,7 +138,12 @@ function summarizeCursorRows(text: string):
       }
 
       if (sawUser) {
-        workHappened = workHappened || isToolWorkEvent(row);
+        const workTimeMs = readToolWorkTimeMs(row, lastUserTimeMs);
+        if (workTimeMs === "unreadable") {
+          return { kind: "unreadable" };
+        }
+
+        workHappened = workHappened || workTimeMs !== null;
         alreadyShared = alreadyShared || hasMainframeWatchUrl(parsed);
       }
     } catch {
@@ -154,7 +159,7 @@ function parseCursorTranscriptRow(record: JsonRecord): CursorTranscriptRow | nul
     return { event: record.event, timestamp: record.timestamp };
   }
   if (record.event === "tool_call" && typeof record.name === "string") {
-    return { event: record.event };
+    return { event: record.event, timestamp: record.timestamp };
   }
   if (record.event === "assistant_message") {
     return { event: record.event };
@@ -170,8 +175,24 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";
 }
 
-function isToolWorkEvent(row: CursorTranscriptRow): boolean {
-  return row.event === "tool_call";
+function readToolWorkTimeMs(
+  row: CursorTranscriptRow,
+  lastUserTimeMs: number | null,
+): number | null | "unreadable" {
+  if (row.event !== "tool_call") {
+    return null;
+  }
+
+  const toolTimeMs = parseTimestampMs(row.timestamp);
+  if (toolTimeMs === null) {
+    return "unreadable";
+  }
+
+  if (lastUserTimeMs !== null && toolTimeMs < lastUserTimeMs) {
+    return "unreadable";
+  }
+
+  return toolTimeMs;
 }
 
 function normalizeEpochMs(value: number): number | null {

@@ -92,7 +92,11 @@ function summarizeCursorRows(text) {
                 continue;
             }
             if (sawUser) {
-                workHappened = workHappened || isToolWorkEvent(row);
+                const workTimeMs = readToolWorkTimeMs(row, lastUserTimeMs);
+                if (workTimeMs === "unreadable") {
+                    return { kind: "unreadable" };
+                }
+                workHappened = workHappened || workTimeMs !== null;
                 alreadyShared = alreadyShared || hasMainframeWatchUrl(parsed);
             }
         }
@@ -107,7 +111,7 @@ function parseCursorTranscriptRow(record) {
         return { event: record.event, timestamp: record.timestamp };
     }
     if (record.event === "tool_call" && typeof record.name === "string") {
-        return { event: record.event };
+        return { event: record.event, timestamp: record.timestamp };
     }
     if (record.event === "assistant_message") {
         return { event: record.event };
@@ -120,8 +124,18 @@ function parseCursorTranscriptRow(record) {
 function isNonEmptyString(value) {
     return typeof value === "string" && value.trim() !== "";
 }
-function isToolWorkEvent(row) {
-    return row.event === "tool_call";
+function readToolWorkTimeMs(row, lastUserTimeMs) {
+    if (row.event !== "tool_call") {
+        return null;
+    }
+    const toolTimeMs = parseTimestampMs(row.timestamp);
+    if (toolTimeMs === null) {
+        return "unreadable";
+    }
+    if (lastUserTimeMs !== null && toolTimeMs < lastUserTimeMs) {
+        return "unreadable";
+    }
+    return toolTimeMs;
 }
 function normalizeEpochMs(value) {
     if (value >= MIN_EPOCH_SECONDS && value <= MAX_EPOCH_SECONDS) {

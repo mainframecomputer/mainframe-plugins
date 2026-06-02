@@ -13,6 +13,7 @@ import { basename, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { z } from "zod";
+import { assertCursorOnlyPackageSurface } from "./package-surface.js";
 
 const PackageSchema = z.object({
   name: z.string().min(1),
@@ -45,6 +46,8 @@ const manifestPaths = [
   pluginManifest.mcpServers,
   pluginManifest.skills,
 ].map((path) => path.replace(/^\.\//, ""));
+
+assertCursorOnlyPackageSurface(packageJson.files);
 
 for (const path of manifestPaths) {
   if (!existsSync(path)) {

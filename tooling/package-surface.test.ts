@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
+import { PACKAGE_FILES, SHIPPED_FILES, readPackageFiles } from "./package-surface.js";
+
 const PackageSchema = z
   .object({
     bin: z.record(z.string(), z.string()),
@@ -24,34 +26,6 @@ const HooksSchema = z
     }),
   })
   .passthrough();
-
-const PACKAGE_FILES = [
-  ".cursor-plugin",
-  ".mcp.json",
-  "LICENSE",
-  "README.md",
-  "assets/logo.png",
-  "dist",
-  "hooks/cursor/hooks.json",
-  "skills",
-];
-
-const SHIPPED_FILES = [
-  ".cursor-plugin/marketplace.json",
-  ".cursor-plugin/plugin.json",
-  ".mcp.json",
-  "LICENSE",
-  "README.md",
-  "assets/logo.png",
-  "dist/hooks/core/afk-gate.js",
-  "dist/hooks/core/json.js",
-  "dist/hooks/core/stop-policy.js",
-  "dist/hooks/core/transcript.js",
-  "dist/hooks/cursor/stop-evaluator.js",
-  "dist/hooks/cursor/stop.js",
-  "hooks/cursor/hooks.json",
-  "skills/share-video/SKILL.md",
-];
 
 describe("package runtime surface", () => {
   it("ships only the Cursor plugin package surface", () => {
@@ -105,15 +79,6 @@ function readCursorPluginRootNodeTarget(command: string): string {
 
 function isPackaged(path: string, packageFiles: readonly string[]): boolean {
   return packageFiles.some((entry) => path === entry || path.startsWith(`${entry}/`));
-}
-
-function readPackageFiles(path: string): string[] {
-  const stat = lstatSync(path);
-  if (!stat.isDirectory()) {
-    return [path];
-  }
-
-  return readdirSync(path).flatMap((entry) => readPackageFiles(join(path, entry)));
 }
 
 function expectPackagePathHasNoSymlink(path: string): void {

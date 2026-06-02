@@ -275,6 +275,65 @@ describe("summarizeTranscript", () => {
     ).toEqual({ kind: "unreadable" });
   });
 
+  it("treats post-user tool calls without timestamps as unreadable", () => {
+    expect(
+      summarizeTranscript(
+        cursorTranscript([
+          {
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "please work on this",
+          },
+          {
+            event: "tool_call",
+            name: "shell",
+            args: { command: "echo done" },
+          },
+        ]),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
+  it("treats post-user tool calls with malformed timestamps as unreadable", () => {
+    expect(
+      summarizeTranscript(
+        cursorTranscript([
+          {
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "please work on this",
+          },
+          {
+            timestamp: "not-a-timestamp",
+            event: "tool_call",
+            name: "shell",
+            args: { command: "echo done" },
+          },
+        ]),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
+  it("treats post-user tool calls with pre-user timestamps as unreadable", () => {
+    expect(
+      summarizeTranscript(
+        cursorTranscript([
+          {
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "please work on this",
+          },
+          {
+            timestamp: "2026-05-08T12:59:00.000Z",
+            event: "tool_call",
+            name: "shell",
+            args: { command: "echo done" },
+          },
+        ]),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
   it("summarizes full transcripts instead of only a byte tail", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
