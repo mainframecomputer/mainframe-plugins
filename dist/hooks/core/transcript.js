@@ -11,7 +11,16 @@ const TOOL_KEYS = [
     "tool_call",
     "tool_calls",
 ];
-const TOOL_NAME_MARKERS = ["bash", "shell", "exec", "apply_patch", "edit", "write", "read", "command"];
+const TOOL_NAME_MARKERS = [
+    "bash",
+    "shell",
+    "exec",
+    "apply_patch",
+    "edit",
+    "write",
+    "read",
+    "command",
+];
 const USER_EVENTS = new Set(["user_message", "user-prompt", "userpromptsubmit"]);
 const MAINFRAME_MARKERS = [
     "generate_video",
