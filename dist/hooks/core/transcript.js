@@ -51,7 +51,7 @@ export function summarizeTranscript(text) {
         alreadyShared: recentRecords.some(({ record }) => isMainframeShareRecord(record)),
     };
 }
-export function parseTimestampMs(value) {
+function parseTimestampMs(value) {
     if (typeof value === "number" && Number.isFinite(value)) {
         return normalizeEpochMs(value);
     }
@@ -71,7 +71,7 @@ export function parseTimestampMs(value) {
     }
     return null;
 }
-export function extractTimestampMs(record) {
+function extractTimestampMs(record) {
     for (const key of TIMESTAMP_KEYS) {
         const timestampMs = parseTimestampMs(record[key]);
         if (timestampMs !== null) {
@@ -84,7 +84,7 @@ export function extractTimestampMs(record) {
     }
     return null;
 }
-export function isRealUserRecord(record) {
+function isRealUserRecord(record) {
     if ("toolUseResult" in record || "tool_use_result" in record || "tool_result" in record) {
         return false;
     }
@@ -103,7 +103,7 @@ export function isRealUserRecord(record) {
     }
     return USER_EVENTS.has(event);
 }
-export function isWorkRecord(record) {
+function isWorkRecord(record) {
     if (hasAnyKey(record, TOOL_RECORD_KEYS)) {
         return true;
     }
@@ -119,7 +119,7 @@ export function isWorkRecord(record) {
     }
     return containsToolUse(record.content) || containsToolUse(record.message);
 }
-export function isMainframeShareRecord(record) {
+function isMainframeShareRecord(record) {
     return (hasMainframeToolName(record, false) ||
         hasMainframeToolPayload(record) ||
         hasMainframeOutput(record));

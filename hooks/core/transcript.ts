@@ -73,7 +73,7 @@ export function summarizeTranscript(text: string): TranscriptSummary {
   };
 }
 
-export function parseTimestampMs(value: unknown): number | null {
+function parseTimestampMs(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     return normalizeEpochMs(value);
   }
@@ -98,7 +98,7 @@ export function parseTimestampMs(value: unknown): number | null {
   return null;
 }
 
-export function extractTimestampMs(record: JsonRecord): number | null {
+function extractTimestampMs(record: JsonRecord): number | null {
   for (const key of TIMESTAMP_KEYS) {
     const timestampMs = parseTimestampMs(record[key]);
     if (timestampMs !== null) {
@@ -114,7 +114,7 @@ export function extractTimestampMs(record: JsonRecord): number | null {
   return null;
 }
 
-export function isRealUserRecord(record: JsonRecord): boolean {
+function isRealUserRecord(record: JsonRecord): boolean {
   if ("toolUseResult" in record || "tool_use_result" in record || "tool_result" in record) {
     return false;
   }
@@ -136,7 +136,7 @@ export function isRealUserRecord(record: JsonRecord): boolean {
   return USER_EVENTS.has(event);
 }
 
-export function isWorkRecord(record: JsonRecord): boolean {
+function isWorkRecord(record: JsonRecord): boolean {
   if (hasAnyKey(record, TOOL_RECORD_KEYS)) {
     return true;
   }
@@ -156,7 +156,7 @@ export function isWorkRecord(record: JsonRecord): boolean {
   return containsToolUse(record.content) || containsToolUse(record.message);
 }
 
-export function isMainframeShareRecord(record: JsonRecord): boolean {
+function isMainframeShareRecord(record: JsonRecord): boolean {
   return (
     hasMainframeToolName(record, false) ||
     hasMainframeToolPayload(record) ||
