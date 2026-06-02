@@ -106,6 +106,34 @@ describe("summarizeTranscript", () => {
     });
   });
 
+  it("does not treat nested-array tool results as the last external user", () => {
+    const summary = summarizeTranscript(
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          role: "user",
+          content: "actual user",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:10:00.000Z",
+          role: "user",
+          content: [[{ type: "tool_result", content: "tool result" }]],
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:15:00.000Z",
+          role: "assistant",
+          content: { type: "tool_use", name: "Bash" },
+        }),
+      ].join("\n"),
+    );
+
+    expect(summary).toMatchObject({
+      kind: "ready",
+      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
+      workHappened: true,
+    });
+  });
+
   it("does not treat tool-result user records as the last external user", () => {
     const summary = summarizeTranscript(
       [

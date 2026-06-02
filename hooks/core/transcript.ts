@@ -226,7 +226,7 @@ function containsToolUse(value: unknown): boolean {
 
 function containsToolResult(value: unknown): boolean {
   if (Array.isArray(value)) {
-    return value.some((entry) => isJsonRecord(entry) && containsToolResult(entry));
+    return value.some((entry) => containsToolResult(entry));
   }
 
   if (isJsonRecord(value)) {

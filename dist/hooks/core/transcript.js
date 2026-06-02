@@ -175,7 +175,7 @@ function containsToolUse(value) {
 }
 function containsToolResult(value) {
     if (Array.isArray(value)) {
-        return value.some((entry) => isJsonRecord(entry) && containsToolResult(entry));
+        return value.some((entry) => containsToolResult(entry));
     }
     if (isJsonRecord(value)) {
         return isToolResultLikeRecord(value) || containsToolResult(value.content);
