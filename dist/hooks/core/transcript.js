@@ -64,6 +64,7 @@ function summarizeCursorRows(text) {
     let lastUserTimeMs = null;
     let workHappened = false;
     let alreadyShared = false;
+    let previousUserTimeMs = null;
     for (const line of text.split(/\r?\n/)) {
         const trimmed = line.trim();
         if (trimmed === "") {
@@ -79,8 +80,13 @@ function summarizeCursorRows(text) {
                 return { kind: "unreadable" };
             }
             if (row.event === "user_message") {
+                const userTimeMs = parseTimestampMs(row.timestamp);
+                if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+                    return { kind: "unreadable" };
+                }
                 sawUser = true;
-                lastUserTimeMs = parseTimestampMs(row.timestamp);
+                lastUserTimeMs = userTimeMs;
+                previousUserTimeMs = userTimeMs;
                 workHappened = false;
                 alreadyShared = false;
                 continue;

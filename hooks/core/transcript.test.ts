@@ -250,6 +250,31 @@ describe("summarizeTranscript", () => {
     }
   });
 
+  it("treats out-of-order user timestamps as unreadable", () => {
+    expect(
+      summarizeTranscript(
+        cursorTranscript([
+          {
+            timestamp: "2026-05-08T15:00:00.000Z",
+            event: "user_message",
+            text: "latest request",
+          },
+          {
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "older request emitted later",
+          },
+          {
+            timestamp: "2026-05-08T13:05:00.000Z",
+            event: "tool_call",
+            name: "shell",
+            args: { command: "echo done" },
+          },
+        ]),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
   it("summarizes full transcripts instead of only a byte tail", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
