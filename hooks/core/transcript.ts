@@ -27,6 +27,7 @@ const USER_EVENTS = new Set(["user_message", "user-prompt", "userpromptsubmit"])
 const MAINFRAME_TOOL_NAMES = new Set(["generate_video", "upload_video", "get_video"]);
 const TOOL_OUTPUT_KEYS = ["output", "result", "content"];
 const WATCH_URL_KEYS = new Set(["watchUrl", "watch_url"]);
+const MAX_TOOL_PAYLOAD_DEPTH = 8;
 
 export type TranscriptSummary =
   | { kind: "unreadable" }
@@ -159,7 +160,7 @@ function isWorkRecord(record: JsonRecord): boolean {
 function isMainframeShareRecord(record: JsonRecord): boolean {
   return (
     hasMainframeToolName(record, false) ||
-    hasMainframeToolPayload(record) ||
+    hasMainframeToolPayload(record, 0) ||
     hasMainframeOutput(record)
   );
 }
@@ -229,20 +230,26 @@ function containsToolUse(value: unknown): boolean {
   return false;
 }
 
-function hasMainframeToolPayload(record: JsonRecord): boolean {
+function hasMainframeToolPayload(record: JsonRecord, depth: number): boolean {
+  if (depth >= MAX_TOOL_PAYLOAD_DEPTH) {
+    return false;
+  }
+
   return TOOL_RECORD_KEYS.some((key) => {
     const value = record[key];
     if (Array.isArray(value)) {
-      return value.some((entry) => isJsonRecord(entry) && hasMainframeToolEvidence(entry));
+      return value.some(
+        (entry) => isJsonRecord(entry) && hasMainframeToolEvidence(entry, depth + 1),
+      );
     }
-    return isJsonRecord(value) && hasMainframeToolEvidence(value);
+    return isJsonRecord(value) && hasMainframeToolEvidence(value, depth + 1);
   });
 }
 
-function hasMainframeToolEvidence(record: JsonRecord): boolean {
+function hasMainframeToolEvidence(record: JsonRecord, depth: number): boolean {
   return (
     hasMainframeToolName(record, true) ||
-    hasMainframeToolPayload(record) ||
+    hasMainframeToolPayload(record, depth) ||
     hasMainframeOutput(record)
   );
 }
