@@ -74,16 +74,19 @@ function summarizeCursorRows(text) {
             if (!isJsonRecord(parsed)) {
                 return { kind: "unreadable" };
             }
-            const event = readCursorTranscriptEvent(parsed);
-            if (event === "user_message") {
+            const row = parseCursorTranscriptRow(parsed);
+            if (row === null) {
+                return { kind: "unreadable" };
+            }
+            if (row.event === "user_message") {
                 sawUser = true;
-                lastUserTimeMs = parseTimestampMs(parsed.timestamp);
+                lastUserTimeMs = parseTimestampMs(row.timestamp);
                 workHappened = false;
                 alreadyShared = false;
                 continue;
             }
             if (sawUser) {
-                workHappened = workHappened || isToolWorkEvent(event);
+                workHappened = workHappened || isToolWorkEvent(row);
                 alreadyShared = alreadyShared || hasMainframeWatchUrl(parsed);
             }
         }
@@ -93,20 +96,26 @@ function summarizeCursorRows(text) {
     }
     return { kind: "parsed", sawUser, lastUserTimeMs, workHappened, alreadyShared };
 }
-function readCursorTranscriptEvent(record) {
-    if (record.event === "user_message") {
-        return record.event;
+function parseCursorTranscriptRow(record) {
+    if (record.event === "user_message" && isNonEmptyString(record.text)) {
+        return { event: record.event, timestamp: record.timestamp };
     }
     if (record.event === "tool_call" && typeof record.name === "string") {
-        return record.event;
+        return { event: record.event };
     }
     if (record.event === "assistant_message") {
-        return record.event;
+        return { event: record.event };
+    }
+    if (record.event === "tool_result") {
+        return { event: record.event };
     }
     return null;
 }
-function isToolWorkEvent(event) {
-    return event === "tool_call";
+function isNonEmptyString(value) {
+    return typeof value === "string" && value.trim() !== "";
+}
+function isToolWorkEvent(row) {
+    return row.event === "tool_call";
 }
 function normalizeEpochMs(value) {
     if (value >= MIN_EPOCH_SECONDS && value <= MAX_EPOCH_SECONDS) {

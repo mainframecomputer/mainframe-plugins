@@ -145,7 +145,7 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("detects Mainframe watch URLs in unknown post-user rows", () => {
+  it("detects Mainframe watch URLs in tool result rows", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
         {
@@ -279,7 +279,7 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("does not treat non-Cursor transcript shapes as user or work rows", () => {
+  it("treats non-Cursor transcript shapes as unreadable", () => {
     expect(
       summarizeTranscript(
         [
@@ -294,7 +294,37 @@ describe("summarizeTranscript", () => {
           }),
         ].join("\n"),
       ),
-    ).toEqual({ kind: "no-user" });
+    ).toEqual({ kind: "unreadable" });
+  });
+
+  it("treats user message rows without text as unreadable", () => {
+    expect(
+      summarizeTranscript(
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          event: "user_message",
+        }),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
+  it("treats unknown non-empty rows as unreadable", () => {
+    expect(
+      summarizeTranscript(
+        cursorTranscript([
+          {
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "please work on this",
+          },
+          {
+            timestamp: "2026-05-08T13:05:00.000Z",
+            event: "user_message_v2",
+            content: "newer user request",
+          },
+        ]),
+      ),
+    ).toEqual({ kind: "unreadable" });
   });
 
   it("treats corrupt non-empty JSONL as unreadable", () => {

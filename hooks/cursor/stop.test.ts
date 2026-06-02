@@ -18,10 +18,12 @@ describe("Cursor stop hook", () => {
       stdin: stopInput({ transcript_path: transcriptPath }),
       nowMs: stopTimeMs,
     });
+    const message = output.followup_message;
 
-    expect(output).toMatchObject({ followup_message: expect.stringContaining("2.5 hours") });
-    expect(output.followup_message).toContain("share-video");
-    expect(output.followup_message).not.toContain("SECRET_NEVER_LEAK");
+    expect(typeof message).toBe("string");
+    expect(message).toContain("2.5 hours");
+    expect(message).toContain("share-video");
+    expect(message).not.toContain("SECRET_NEVER_LEAK");
   });
 
   it("does not fire before the fixed one-hour threshold", () => {
@@ -83,6 +85,39 @@ describe("Cursor stop hook", () => {
           timestamp: "2026-05-08T13:30:00.000Z",
           event: "tool_result",
           content: [{ type: "text", text: "Shared: https://mainframe.app/watch/result" }],
+        }),
+      ].join("\n"),
+    );
+
+    expect(
+      evaluateCursorStopHook({
+        stdin: stopInput({ transcript_path: path }),
+        nowMs: stopTimeMs,
+      }),
+    ).toEqual({});
+  });
+
+  it("does not fire after an unknown later user-like transcript row", () => {
+    const directory = mkdtempSync(join(tmpdir(), "mainframe-stop-test-"));
+    const path = join(directory, "transcript.jsonl");
+    writeFileSync(
+      path,
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          event: "user_message",
+          text: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:05:00.000Z",
+          event: "tool_call",
+          name: "shell",
+          args: { command: "echo done" },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T15:25:00.000Z",
+          event: "user_message_v2",
+          content: "fresh user activity",
         }),
       ].join("\n"),
     );
