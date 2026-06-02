@@ -89,6 +89,9 @@ function isRealUserRecord(record) {
     if ("toolUseResult" in record || "tool_use_result" in record || "tool_result" in record) {
         return false;
     }
+    if (containsToolResult(record.content) || containsToolResult(record.message)) {
+        return false;
+    }
     const type = lowerString(record.type);
     const event = lowerString(record.event);
     const role = lowerString(record.role);
@@ -167,15 +170,31 @@ function containsToolUse(value) {
             if (!isJsonRecord(entry)) {
                 return false;
             }
-            const type = lowerString(entry.type);
-            const name = lowerString(entry.name);
-            return (type.includes("tool") || name.includes("tool") || name === "bash" || name === "apply_patch");
+            return isToolUseLikeRecord(entry);
         });
     }
     if (isJsonRecord(value)) {
-        return containsToolUse(value.content);
+        return isToolUseLikeRecord(value) || containsToolUse(value.content);
     }
     return false;
+}
+function containsToolResult(value) {
+    if (Array.isArray(value)) {
+        return value.some((entry) => isJsonRecord(entry) && containsToolResult(entry));
+    }
+    if (isJsonRecord(value)) {
+        return isToolResultLikeRecord(value) || containsToolResult(value.content);
+    }
+    return false;
+}
+function isToolUseLikeRecord(record) {
+    const type = lowerString(record.type);
+    const name = lowerString(record.name);
+    return (type.includes("tool") || name.includes("tool") || name === "bash" || name === "apply_patch");
+}
+function isToolResultLikeRecord(record) {
+    const type = lowerString(record.type);
+    return type.includes("tool") && type.includes("result");
 }
 function hasMainframeToolPayload(record, depth) {
     if (depth >= MAX_TOOL_PAYLOAD_DEPTH) {
