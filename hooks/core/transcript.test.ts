@@ -92,7 +92,7 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("ignores Mainframe watch URLs from non-Mainframe tool output", () => {
+  it("detects a Mainframe watch URL without relying on the tool name", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
         {
@@ -112,11 +112,11 @@ describe("summarizeTranscript", () => {
     expect(summary).toMatchObject({
       kind: "ready",
       workHappened: true,
-      alreadyShared: false,
+      alreadyShared: true,
     });
   });
 
-  it("ignores Mainframe mentions without explicit Cursor tool output", () => {
+  it("detects Mainframe watch URLs in assistant messages after work", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
         {
@@ -134,6 +134,30 @@ describe("summarizeTranscript", () => {
           timestamp: "2026-05-08T13:30:00.000Z",
           event: "assistant_message",
           text: "Maybe use share-video later: https://mainframe.app/watch/not-real",
+        },
+      ]),
+    );
+
+    expect(summary).toMatchObject({
+      kind: "ready",
+      workHappened: true,
+      alreadyShared: true,
+    });
+  });
+
+  it("does not treat a watch URL in the latest user message as an existing share", () => {
+    const summary = summarizeTranscript(
+      cursorTranscript([
+        {
+          timestamp: "2026-05-08T13:00:00.000Z",
+          event: "user_message",
+          text: "please look at https://mainframe.app/watch/input",
+        },
+        {
+          timestamp: "2026-05-08T13:05:00.000Z",
+          event: "tool_call",
+          name: "shell",
+          args: { command: "echo done" },
         },
       ]),
     );

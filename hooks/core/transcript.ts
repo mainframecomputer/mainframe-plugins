@@ -9,7 +9,6 @@ const MIN_EPOCH_MS = MIN_EPOCH_SECONDS * 1000;
 const MAX_EPOCH_MS = MAX_EPOCH_SECONDS * 1000;
 const ISO_TIMESTAMP_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
-const MAINFRAME_TOOL_NAMES = new Set(["generate_video", "upload_video", "get_video"]);
 const MAINFRAME_WATCH_URL_PREFIX = "https://mainframe.app/watch/";
 
 export type TranscriptSummary =
@@ -24,7 +23,8 @@ export type TranscriptSummary =
     };
 
 type CursorTranscriptRow =
-  | { event: "tool_call"; timestamp: unknown; name: string; output: unknown }
+  | { event: "assistant_message" }
+  | { event: "tool_call" }
   | { event: "user_message"; timestamp: unknown };
 
 export function summarizeTranscriptFile(path: string): TranscriptSummary {
@@ -116,22 +116,22 @@ function summarizeCursorRows(text: string):
         return { kind: "unreadable" };
       }
 
-      const row = parseCursorTranscriptRow(parsed);
-      if (row === null) {
-        continue;
-      }
-
-      if (row.event === "user_message") {
+      const event = readCursorTranscriptEvent(parsed);
+      if (event === "user_message") {
         sawUser = true;
-        lastUserTimeMs = parseTimestampMs(row.timestamp);
+        lastUserTimeMs = parseTimestampMs(parsed.timestamp);
         workHappened = false;
         alreadyShared = false;
         continue;
       }
 
+      if (!isPostUserCursorEvent(event)) {
+        continue;
+      }
+
       if (sawUser) {
-        workHappened = true;
-        alreadyShared = alreadyShared || isMainframeShareRow(row);
+        workHappened = workHappened || event === "tool_call";
+        alreadyShared = alreadyShared || hasMainframeWatchUrl(parsed);
       }
     } catch {
       return { kind: "unreadable" };
@@ -141,20 +141,24 @@ function summarizeCursorRows(text: string):
   return { kind: "parsed", sawUser, lastUserTimeMs, workHappened, alreadyShared };
 }
 
-function parseCursorTranscriptRow(record: JsonRecord): CursorTranscriptRow | null {
+function readCursorTranscriptEvent(record: JsonRecord): CursorTranscriptRow["event"] | null {
   if (record.event === "user_message") {
-    return { event: record.event, timestamp: record.timestamp };
+    return record.event;
   }
   if (record.event === "tool_call" && typeof record.name === "string") {
-    return {
-      event: record.event,
-      timestamp: record.timestamp,
-      name: record.name,
-      output: record.output,
-    };
+    return record.event;
+  }
+  if (record.event === "assistant_message") {
+    return record.event;
   }
 
   return null;
+}
+
+function isPostUserCursorEvent(
+  event: CursorTranscriptRow["event"] | null,
+): event is "assistant_message" | "tool_call" {
+  return event === "assistant_message" || event === "tool_call";
 }
 
 function normalizeEpochMs(value: number): number | null {
@@ -167,14 +171,6 @@ function normalizeEpochMs(value: number): number | null {
   }
 
   return null;
-}
-
-function isMainframeShareRow(row: CursorTranscriptRow): boolean {
-  if (row.event !== "tool_call" || !MAINFRAME_TOOL_NAMES.has(row.name)) {
-    return false;
-  }
-
-  return hasMainframeWatchUrl(row.output);
 }
 
 function hasMainframeWatchUrl(value: unknown): boolean {
