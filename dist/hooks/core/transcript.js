@@ -1,10 +1,19 @@
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync } from "node:fs";
 import { isJsonRecord } from "./json.js";
-const SECONDS_TIMESTAMP_CUTOFF = 1_000_000_000_000;
+const MAX_TRANSCRIPT_BYTES = 5 * 1024 * 1024;
+const MIN_EPOCH_SECONDS = 946_684_800;
+const MAX_EPOCH_SECONDS = 4_102_444_800;
+const MIN_EPOCH_MS = MIN_EPOCH_SECONDS * 1000;
+const MAX_EPOCH_MS = MAX_EPOCH_SECONDS * 1000;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
 const MAINFRAME_TOOL_NAMES = new Set(["generate_video", "upload_video", "get_video"]);
-const WATCH_URL_KEYS = new Set(["watchUrl", "watch_url"]);
+const MAINFRAME_WATCH_URL_PREFIX = "https://mainframe.app/watch/";
 export function summarizeTranscriptFile(path) {
     try {
+        const stat = lstatSync(path);
+        if (!stat.isFile() || stat.size > MAX_TRANSCRIPT_BYTES) {
+            return { kind: "unreadable" };
+        }
         return summarizeTranscript(readFileSync(path, "utf8"));
     }
     catch {
@@ -38,12 +47,14 @@ function parseTimestampMs(value) {
         if (trimmed === "") {
             return null;
         }
-        const numeric = Number(trimmed);
-        if (Number.isFinite(numeric)) {
-            return normalizeEpochMs(numeric);
+        if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+            return normalizeEpochMs(Number(trimmed));
+        }
+        if (!ISO_TIMESTAMP_PATTERN.test(trimmed)) {
+            return null;
         }
         const parsed = Date.parse(trimmed);
-        if (Number.isFinite(parsed)) {
+        if (Number.isFinite(parsed) && parsed >= MIN_EPOCH_MS && parsed <= MAX_EPOCH_MS) {
             return parsed;
         }
     }
@@ -101,7 +112,13 @@ function parseCursorTranscriptRow(record) {
     return null;
 }
 function normalizeEpochMs(value) {
-    return value < SECONDS_TIMESTAMP_CUTOFF ? Math.round(value * 1000) : Math.round(value);
+    if (value >= MIN_EPOCH_SECONDS && value <= MAX_EPOCH_SECONDS) {
+        return Math.round(value * 1000);
+    }
+    if (value >= MIN_EPOCH_MS && value <= MAX_EPOCH_MS) {
+        return Math.round(value);
+    }
+    return null;
 }
 function isMainframeShareRow(row) {
     if (row.event !== "tool_call" || !MAINFRAME_TOOL_NAMES.has(row.name)) {
@@ -111,18 +128,13 @@ function isMainframeShareRow(row) {
 }
 function hasMainframeWatchUrl(value) {
     if (typeof value === "string") {
-        return value.startsWith("https://mainframe.app/watch/");
+        return value.includes(MAINFRAME_WATCH_URL_PREFIX);
     }
     if (Array.isArray(value)) {
         return value.some((entry) => hasMainframeWatchUrl(entry));
     }
     if (isJsonRecord(value)) {
-        return Object.entries(value).some(([key, entry]) => {
-            if (WATCH_URL_KEYS.has(key)) {
-                return hasMainframeWatchUrl(entry);
-            }
-            return false;
-        });
+        return Object.values(value).some((entry) => hasMainframeWatchUrl(entry));
     }
     return false;
 }

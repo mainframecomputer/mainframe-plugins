@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 const generatedPaths = [
@@ -9,15 +9,24 @@ const generatedPaths = [
 
 const before = new Map(generatedPaths.map((path) => [path, readGeneratedPath(path)]));
 const result = spawnSync("bun", ["run", "generate"], { stdio: "inherit" });
+let exitCode = 0;
 
 if (result.status !== 0) {
-  process.exit(result.status ?? 1);
+  exitCode = result.status ?? 1;
+} else {
+  const drifted = generatedPaths.filter((path) => before.get(path) !== readGeneratedPath(path));
+  if (drifted.length > 0) {
+    console.error(["Generated files are out of date:", ...drifted].join("\n"));
+    exitCode = 1;
+  }
 }
 
-const drifted = generatedPaths.filter((path) => before.get(path) !== readGeneratedPath(path));
-if (drifted.length > 0) {
-  console.error(["Generated files are out of date:", ...drifted].join("\n"));
-  process.exit(1);
+if (exitCode !== 0) {
+  for (const [path, content] of before) {
+    writeFileSync(path, content);
+  }
+
+  process.exit(exitCode);
 }
 
 function readGeneratedPath(path: string): string {
