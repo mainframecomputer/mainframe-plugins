@@ -31,6 +31,10 @@ export function summarizeTranscriptFile(path: string): TranscriptSummary {
 
 export function summarizeTranscript(text: string): TranscriptSummary {
   const summary = summarizeCursorRows(text);
+  if (summary.kind === "unreadable") {
+    return summary;
+  }
+
   if (!summary.sawUser) {
     return { kind: "no-user" };
   }
@@ -72,12 +76,15 @@ function parseTimestampMs(value: unknown): number | null {
   return null;
 }
 
-function summarizeCursorRows(text: string): {
-  sawUser: boolean;
-  lastUserTimeMs: number | null;
-  workHappened: boolean;
-  alreadyShared: boolean;
-} {
+function summarizeCursorRows(text: string):
+  | {
+      kind: "parsed";
+      sawUser: boolean;
+      lastUserTimeMs: number | null;
+      workHappened: boolean;
+      alreadyShared: boolean;
+    }
+  | { kind: "unreadable" } {
   let sawUser = false;
   let lastUserTimeMs: number | null = null;
   let workHappened = false;
@@ -92,7 +99,7 @@ function summarizeCursorRows(text: string): {
     try {
       const parsed: unknown = JSON.parse(trimmed);
       if (!isJsonRecord(parsed)) {
-        continue;
+        return { kind: "unreadable" };
       }
 
       const row = parseCursorTranscriptRow(parsed);
@@ -113,11 +120,11 @@ function summarizeCursorRows(text: string): {
         alreadyShared = alreadyShared || isMainframeShareRow(row);
       }
     } catch {
-      continue;
+      return { kind: "unreadable" };
     }
   }
 
-  return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
+  return { kind: "parsed", sawUser, lastUserTimeMs, workHappened, alreadyShared };
 }
 
 function parseCursorTranscriptRow(record: JsonRecord): CursorTranscriptRow | null {

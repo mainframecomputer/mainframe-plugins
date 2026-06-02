@@ -13,6 +13,9 @@ export function summarizeTranscriptFile(path) {
 }
 export function summarizeTranscript(text) {
     const summary = summarizeCursorRows(text);
+    if (summary.kind === "unreadable") {
+        return summary;
+    }
     if (!summary.sawUser) {
         return { kind: "no-user" };
     }
@@ -59,7 +62,7 @@ function summarizeCursorRows(text) {
         try {
             const parsed = JSON.parse(trimmed);
             if (!isJsonRecord(parsed)) {
-                continue;
+                return { kind: "unreadable" };
             }
             const row = parseCursorTranscriptRow(parsed);
             if (row === null) {
@@ -78,10 +81,10 @@ function summarizeCursorRows(text) {
             }
         }
         catch {
-            continue;
+            return { kind: "unreadable" };
         }
     }
-    return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
+    return { kind: "parsed", sawUser, lastUserTimeMs, workHappened, alreadyShared };
 }
 function parseCursorTranscriptRow(record) {
     if (record.event === "user_message") {

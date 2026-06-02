@@ -51,6 +51,28 @@ describe("Cursor stop hook", () => {
       }),
     ).toEqual({});
   });
+
+  it("does not fire when loop count is missing or malformed", () => {
+    for (const loop_count of [undefined, null, "0", Number.NaN, 0.5, -1]) {
+      expect(
+        evaluateCursorStopHook({
+          stdin: stopInput({ loop_count, transcript_path: transcriptPath }),
+          nowMs: stopTimeMs,
+        }),
+      ).toEqual({});
+    }
+  });
+
+  it("does not fire when the transcript path is missing or empty", () => {
+    for (const transcript_path of [undefined, null, ""]) {
+      expect(
+        evaluateCursorStopHook({
+          stdin: stopInput({ transcript_path }),
+          nowMs: stopTimeMs,
+        }),
+      ).toEqual({});
+    }
+  });
 });
 
 function stopInput(overrides: Record<string, unknown>): string {

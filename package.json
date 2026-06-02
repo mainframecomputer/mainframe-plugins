@@ -33,6 +33,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && bun tooling/mark-executable.ts",
+    "build:check": "bun run build && git diff --exit-code -- dist",
     "generate": "bun tooling/generate.ts && oxfmt --write package.json .cursor-plugin",
     "check:generated": "bun tooling/generated-drift-check.ts",
     "archive:release": "bun run generate && bun run build && git diff --exit-code -- package.json .cursor-plugin dist && bun tooling/release-archive.ts",
@@ -42,8 +43,8 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "test": "vitest run",
-    "verify": "bun run check:generated && bun run typecheck && bun run build && bun run lint && bun run format:check && bun run test",
-    "verify:ci": "bun run generate && git diff --exit-code && bun run typecheck && bun run build && git diff --exit-code -- dist && bun run lint && bun run format:check && bun run test",
+    "verify": "bun run check:generated && bun run typecheck && bun run build:check && bun run lint && bun run format:check && bun run test",
+    "verify:ci": "bun run generate && git diff --exit-code && bun run typecheck && bun run build:check && bun run lint && bun run format:check && bun run test",
     "prepare": "husky"
   },
   "devDependencies": {

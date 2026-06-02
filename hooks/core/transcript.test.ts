@@ -133,6 +133,27 @@ describe("summarizeTranscript", () => {
     ).toEqual({ kind: "no-user" });
   });
 
+  it("treats corrupt non-empty JSONL as unreadable", () => {
+    expect(
+      summarizeTranscript(
+        [
+          JSON.stringify({
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "please work on this",
+          }),
+          "{not-json",
+        ].join("\n"),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
+  it("treats non-object JSONL rows as unreadable", () => {
+    expect(summarizeTranscript(JSON.stringify(["not", "a", "cursor", "row"]))).toEqual({
+      kind: "unreadable",
+    });
+  });
+
   it("uses a discriminated state when no real user is present", () => {
     expect(
       summarizeTranscript(JSON.stringify({ event: "assistant_message", text: "done" })),

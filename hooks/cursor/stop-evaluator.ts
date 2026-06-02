@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { evaluateStopPolicy } from "../core/stop-policy.js";
-import { parseJsonRecord, type JsonRecord } from "../core/json.js";
+import { parseJsonRecord } from "../core/json.js";
 
 export type CursorStopEvaluationInput = {
   stdin: string;
@@ -11,18 +11,13 @@ export type CursorStopEvaluationInput = {
 export type CursorStopHookOutput = { followup_message?: string };
 
 export function evaluateCursorStopHook(input: CursorStopEvaluationInput): CursorStopHookOutput {
-  const hookInput = parseJsonRecord(input.stdin);
-  if (hookInput === null || hookInput.status !== "completed" || readLoopCount(hookInput) > 0) {
-    return {};
-  }
-
-  const transcriptPath = readTranscriptPath(hookInput);
-  if (transcriptPath === null) {
+  const hookInput = parseCursorStopInput(input.stdin);
+  if (hookInput === null || hookInput.loopCount > 0) {
     return {};
   }
 
   const decision = evaluateStopPolicy({
-    transcriptPath,
+    transcriptPath: hookInput.transcriptPath,
     stopTimeMs: input.nowMs ?? Date.now(),
   });
   if (decision.kind === "skip") {
@@ -38,16 +33,26 @@ export function runCursorStopHookCli(): void {
   process.stdout.write(`${JSON.stringify(output)}\n`);
 }
 
-function readTranscriptPath(input: JsonRecord): string | null {
-  const value = input.transcript_path;
-  if (typeof value === "string") {
-    return value;
+function parseCursorStopInput(stdin: string): { transcriptPath: string; loopCount: number } | null {
+  const input = parseJsonRecord(stdin);
+  if (input === null || input.status !== "completed") {
+    return null;
   }
 
-  return null;
-}
+  const transcriptPath = input.transcript_path;
+  if (typeof transcriptPath !== "string" || transcriptPath.trim() === "") {
+    return null;
+  }
 
-function readLoopCount(input: JsonRecord): number {
-  const value = input.loop_count;
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+  const loopCount = input.loop_count;
+  if (
+    typeof loopCount !== "number" ||
+    !Number.isFinite(loopCount) ||
+    !Number.isInteger(loopCount) ||
+    loopCount < 0
+  ) {
+    return null;
+  }
+
+  return { transcriptPath, loopCount };
 }

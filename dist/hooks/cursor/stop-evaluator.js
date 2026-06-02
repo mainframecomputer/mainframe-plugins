@@ -2,16 +2,12 @@ import { readFileSync } from "node:fs";
 import { evaluateStopPolicy } from "../core/stop-policy.js";
 import { parseJsonRecord } from "../core/json.js";
 export function evaluateCursorStopHook(input) {
-    const hookInput = parseJsonRecord(input.stdin);
-    if (hookInput === null || hookInput.status !== "completed" || readLoopCount(hookInput) > 0) {
-        return {};
-    }
-    const transcriptPath = readTranscriptPath(hookInput);
-    if (transcriptPath === null) {
+    const hookInput = parseCursorStopInput(input.stdin);
+    if (hookInput === null || hookInput.loopCount > 0) {
         return {};
     }
     const decision = evaluateStopPolicy({
-        transcriptPath,
+        transcriptPath: hookInput.transcriptPath,
         stopTimeMs: input.nowMs ?? Date.now(),
     });
     if (decision.kind === "skip") {
@@ -24,14 +20,21 @@ export function runCursorStopHookCli() {
     const output = evaluateCursorStopHook({ stdin });
     process.stdout.write(`${JSON.stringify(output)}\n`);
 }
-function readTranscriptPath(input) {
-    const value = input.transcript_path;
-    if (typeof value === "string") {
-        return value;
+function parseCursorStopInput(stdin) {
+    const input = parseJsonRecord(stdin);
+    if (input === null || input.status !== "completed") {
+        return null;
     }
-    return null;
-}
-function readLoopCount(input) {
-    const value = input.loop_count;
-    return typeof value === "number" && Number.isFinite(value) ? value : 0;
+    const transcriptPath = input.transcript_path;
+    if (typeof transcriptPath !== "string" || transcriptPath.trim() === "") {
+        return null;
+    }
+    const loopCount = input.loop_count;
+    if (typeof loopCount !== "number" ||
+        !Number.isFinite(loopCount) ||
+        !Number.isInteger(loopCount) ||
+        loopCount < 0) {
+        return null;
+    }
+    return { transcriptPath, loopCount };
 }
