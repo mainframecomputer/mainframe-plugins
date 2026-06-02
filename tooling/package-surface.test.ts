@@ -25,7 +25,24 @@ const HooksSchema = z
   })
   .passthrough();
 
+const PACKAGE_FILES = [
+  ".cursor-plugin",
+  ".mcp.json",
+  "LICENSE",
+  "README.md",
+  "assets/logo.png",
+  "dist",
+  "hooks/cursor/hooks.json",
+  "skills",
+];
+
 describe("package runtime surface", () => {
+  it("ships only the Cursor plugin package surface", () => {
+    const packageJson = PackageSchema.parse(readJson("package.json"));
+
+    expect(packageJson.files).toEqual(PACKAGE_FILES);
+  });
+
   it("ships the executable Cursor hook runtime referenced by hooks.json and package bin", () => {
     const packageJson = PackageSchema.parse(readJson("package.json"));
     const hooks = HooksSchema.parse(readJson("hooks/cursor/hooks.json"));

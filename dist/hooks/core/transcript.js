@@ -82,9 +82,6 @@ function summarizeCursorRows(text) {
                 alreadyShared = false;
                 continue;
             }
-            if (!isPostUserCursorEvent(event)) {
-                continue;
-            }
             if (sawUser) {
                 workHappened = workHappened || isToolWorkEvent(event);
                 alreadyShared = alreadyShared || hasMainframeWatchUrl(parsed);
@@ -107,9 +104,6 @@ function readCursorTranscriptEvent(record) {
         return record.event;
     }
     return null;
-}
-function isPostUserCursorEvent(event) {
-    return event === "assistant_message" || event === "tool_call";
 }
 function isToolWorkEvent(event) {
     return event === "tool_call";

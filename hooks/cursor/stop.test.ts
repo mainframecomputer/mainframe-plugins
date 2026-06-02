@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -56,6 +57,39 @@ describe("Cursor stop hook", () => {
     expect(
       evaluateCursorStopHook({
         stdin: stopInput({ loop_count: 1, transcript_path: transcriptPath }),
+        nowMs: stopTimeMs,
+      }),
+    ).toEqual({});
+  });
+
+  it("does not fire after a Mainframe watch URL appears in an unknown transcript row", () => {
+    const directory = mkdtempSync(join(tmpdir(), "mainframe-stop-test-"));
+    const path = join(directory, "transcript.jsonl");
+    writeFileSync(
+      path,
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          event: "user_message",
+          text: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:05:00.000Z",
+          event: "tool_call",
+          name: "shell",
+          args: { command: "echo done" },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:30:00.000Z",
+          event: "tool_result",
+          content: [{ type: "text", text: "Shared: https://mainframe.app/watch/result" }],
+        }),
+      ].join("\n"),
+    );
+
+    expect(
+      evaluateCursorStopHook({
+        stdin: stopInput({ transcript_path: path }),
         nowMs: stopTimeMs,
       }),
     ).toEqual({});

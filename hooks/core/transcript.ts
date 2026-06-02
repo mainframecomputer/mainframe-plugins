@@ -125,10 +125,6 @@ function summarizeCursorRows(text: string):
         continue;
       }
 
-      if (!isPostUserCursorEvent(event)) {
-        continue;
-      }
-
       if (sawUser) {
         workHappened = workHappened || isToolWorkEvent(event);
         alreadyShared = alreadyShared || hasMainframeWatchUrl(parsed);
@@ -155,13 +151,7 @@ function readCursorTranscriptEvent(record: JsonRecord): CursorTranscriptRow["eve
   return null;
 }
 
-function isPostUserCursorEvent(
-  event: CursorTranscriptRow["event"] | null,
-): event is "assistant_message" | "tool_call" {
-  return event === "assistant_message" || event === "tool_call";
-}
-
-function isToolWorkEvent(event: CursorTranscriptRow["event"]): boolean {
+function isToolWorkEvent(event: CursorTranscriptRow["event"] | null): boolean {
   return event === "tool_call";
 }
 
