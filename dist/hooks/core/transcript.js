@@ -115,7 +115,7 @@ export function isWorkRecord(record) {
     const type = lowerString(record.type);
     const event = lowerString(record.event);
     const kind = lowerString(record.kind);
-    const toolName = lowerString(record.tool_name ?? record.toolName ?? record.name);
+    const toolName = lowerString(record.tool_name ?? record.toolName);
     if (type.includes("tool") || event.includes("tool") || kind.includes("tool")) {
         return true;
     }

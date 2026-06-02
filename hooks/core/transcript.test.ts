@@ -89,6 +89,29 @@ describe("summarizeTranscript", () => {
     expect(summary.alreadyShared).toBe(true);
   });
 
+  it("does not treat generic record names as tool work", () => {
+    const summary = summarizeTranscript(
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          role: "user",
+          content: "please work on this",
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:05:00.000Z",
+          name: "command-r-plus",
+          type: "model",
+        }),
+      ].join("\n"),
+    );
+
+    expect(summary).toMatchObject({ kind: "ready" });
+    if (summary.kind !== "ready") {
+      throw new Error("expected a ready transcript summary");
+    }
+    expect(summary.workHappened).toBe(false);
+  });
+
   it("uses a discriminated state when no real user is present", () => {
     expect(summarizeTranscript(JSON.stringify({ type: "assistant", content: "done" }))).toEqual({
       kind: "no-user",
