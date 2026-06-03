@@ -5,13 +5,13 @@
     "email": "support@mainframe.app"
   },
   "metadata": {
-    "description": "Create and share short Mainframe video updates from agent work."
+    "description": "Create and share short video updates from agent work."
   },
   "plugins": [
     {
       "name": "mainframe",
       "source": ".",
-      "description": "Create and share short Mainframe video updates from agent work."
+      "description": "Create and share short video updates from agent work."
     }
   ]
 }
