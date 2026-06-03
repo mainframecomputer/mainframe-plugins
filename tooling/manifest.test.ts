@@ -13,7 +13,7 @@ const AuthorSchema = z
 const RepositorySchema = z.literal("https://github.com/mainframecomputer/mainframe-plugins.git");
 
 const DescriptionSchema = z.literal(
-  "Create and share short Mainframe video updates from coding-agent work.",
+  "Create and share short Mainframe video updates from agent work.",
 );
 
 const LongDescriptionSchema = z.literal(

@@ -35,7 +35,7 @@ const metadata = MetadataSchema.parse({
   displayName: "Mainframe",
   packageName: "@mainframe/plugins",
   version: "0.1.0",
-  description: "Create and share short Mainframe video updates from coding-agent work.",
+  description: "Create and share short Mainframe video updates from agent work.",
   longDescription:
     "Mainframe adds a share-video skill, hosted MCP server wiring, and a stop hook that suggests a short video update after meaningful agent work when the user has been away.",
   category: "Productivity",
