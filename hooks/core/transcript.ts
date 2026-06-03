@@ -9,7 +9,7 @@ const MIN_EPOCH_MS = MIN_EPOCH_SECONDS * 1000;
 const MAX_EPOCH_MS = MAX_EPOCH_SECONDS * 1000;
 const ISO_TIMESTAMP_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
-const MAINFRAME_WATCH_URL_PREFIX = "https://mainframe.app/watch/";
+const MAINFRAME_VIDEO_URL_PREFIX = "https://mainframe.app/v/";
 
 export type TranscriptSummary =
   | { kind: "unreadable" }
@@ -146,7 +146,7 @@ function summarizeCursorRows(text: string):
         }
 
         workHappened = workHappened || workTimeMs !== null;
-        alreadyShared = alreadyShared || hasMainframeWatchUrl(parsed);
+        alreadyShared = alreadyShared || hasMainframeVideoUrl(parsed);
       }
     } catch {
       return { kind: "unreadable" };
@@ -209,17 +209,17 @@ function normalizeEpochMs(value: number): number | null {
   return null;
 }
 
-function hasMainframeWatchUrl(value: unknown): boolean {
+function hasMainframeVideoUrl(value: unknown): boolean {
   if (typeof value === "string") {
-    return value.includes(MAINFRAME_WATCH_URL_PREFIX);
+    return value.includes(MAINFRAME_VIDEO_URL_PREFIX);
   }
 
   if (Array.isArray(value)) {
-    return value.some((entry) => hasMainframeWatchUrl(entry));
+    return value.some((entry) => hasMainframeVideoUrl(entry));
   }
 
   if (isJsonRecord(value)) {
-    return Object.values(value).some((entry) => hasMainframeWatchUrl(entry));
+    return Object.values(value).some((entry) => hasMainframeVideoUrl(entry));
   }
 
   return false;

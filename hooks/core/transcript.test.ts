@@ -49,7 +49,7 @@ describe("summarizeTranscript", () => {
           timestamp: "2026-05-08T13:30:00.000Z",
           event: "tool_call",
           name: "generate_video",
-          output: { watchUrl: "https://mainframe.app/watch/abc" },
+          output: { watchUrl: "https://mainframe.app/v/37507089004e8f3700deb918a48b2556" },
         },
       ]),
     );
@@ -77,7 +77,7 @@ describe("summarizeTranscript", () => {
             content: [
               {
                 type: "text",
-                text: "Created Mainframe video: https://mainframe.app/watch/abc",
+                text: "Created Mainframe video: https://mainframe.app/v/37507089004e8f3700deb918a48b2556",
               },
             ],
           },
@@ -92,7 +92,7 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("detects a Mainframe watch URL without relying on the tool name", () => {
+  it("detects a Mainframe video URL without relying on the tool name", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
         {
@@ -104,7 +104,7 @@ describe("summarizeTranscript", () => {
           timestamp: "2026-05-08T13:30:00.000Z",
           event: "tool_call",
           name: "shell",
-          output: "https://mainframe.app/watch/not-from-mainframe",
+          output: "https://mainframe.app/v/37507089004e8f3700deb918a48b2556",
         },
       ]),
     );
@@ -116,7 +116,7 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("detects Mainframe watch URLs in assistant messages after work", () => {
+  it("detects Mainframe video URLs in assistant messages after work", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
         {
@@ -133,7 +133,7 @@ describe("summarizeTranscript", () => {
         {
           timestamp: "2026-05-08T13:30:00.000Z",
           event: "assistant_message",
-          text: "Maybe use share-video later: https://mainframe.app/watch/not-real",
+          text: "Maybe use share-video later: https://mainframe.app/v/37507089004e8f3700deb918a48b2556",
         },
       ]),
     );
@@ -145,7 +145,7 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("detects Mainframe watch URLs in tool result rows", () => {
+  it("detects Mainframe video URLs in tool result rows", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
         {
@@ -162,7 +162,12 @@ describe("summarizeTranscript", () => {
         {
           timestamp: "2026-05-08T13:30:00.000Z",
           event: "tool_result",
-          content: [{ type: "text", text: "Shared: https://mainframe.app/watch/result" }],
+          content: [
+            {
+              type: "text",
+              text: "Shared: https://mainframe.app/v/37507089004e8f3700deb918a48b2556",
+            },
+          ],
         },
       ]),
     );
@@ -174,13 +179,42 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("does not treat a watch URL in the latest user message as an existing share", () => {
+  it("does not treat legacy watch URLs as existing Mainframe shares", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
           event: "user_message",
-          text: "please look at https://mainframe.app/watch/input",
+          text: "please work on this",
+        },
+        {
+          timestamp: "2026-05-08T13:05:00.000Z",
+          event: "tool_call",
+          name: "shell",
+          args: { command: "echo done" },
+        },
+        {
+          timestamp: "2026-05-08T13:30:00.000Z",
+          event: "tool_result",
+          content: [{ type: "text", text: "Shared: https://mainframe.app/watch/not-real" }],
+        },
+      ]),
+    );
+
+    expect(summary).toMatchObject({
+      kind: "ready",
+      workHappened: true,
+      alreadyShared: false,
+    });
+  });
+
+  it("does not treat a video URL in the latest user message as an existing share", () => {
+    const summary = summarizeTranscript(
+      cursorTranscript([
+        {
+          timestamp: "2026-05-08T13:00:00.000Z",
+          event: "user_message",
+          text: "please look at https://mainframe.app/v/37507089004e8f3700deb918a48b2556",
         },
         {
           timestamp: "2026-05-08T13:05:00.000Z",

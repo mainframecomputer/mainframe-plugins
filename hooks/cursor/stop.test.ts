@@ -64,7 +64,7 @@ describe("Cursor stop hook", () => {
     ).toEqual({});
   });
 
-  it("does not fire after a Mainframe watch URL appears in an unknown transcript row", () => {
+  it("does not fire after a Mainframe video URL appears in an unknown transcript row", () => {
     const directory = mkdtempSync(join(tmpdir(), "mainframe-stop-test-"));
     const path = join(directory, "transcript.jsonl");
     writeFileSync(
@@ -84,7 +84,12 @@ describe("Cursor stop hook", () => {
         JSON.stringify({
           timestamp: "2026-05-08T13:30:00.000Z",
           event: "tool_result",
-          content: [{ type: "text", text: "Shared: https://mainframe.app/watch/result" }],
+          content: [
+            {
+              type: "text",
+              text: "Shared: https://mainframe.app/v/37507089004e8f3700deb918a48b2556",
+            },
+          ],
         }),
       ].join("\n"),
     );
