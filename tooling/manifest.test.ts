@@ -15,7 +15,7 @@ const RepositorySchema = z.literal("https://github.com/mainframecomputer/mainfra
 const DescriptionSchema = z.literal("Create and share short video updates from agent work.");
 
 const LongDescriptionSchema = z.literal(
-  "Your agents record short videos of what they did, so you can stay up to date on their work at a glance. Each recap uses your own voice and company branding, and is shareable with your team.",
+  "When your agent finishes a task, it sends you a short video of what it did, in your own voice and company branding. Stay up to date at a glance, and share the recap with your team.",
 );
 
 const KeywordsSchema = z.tuple([
