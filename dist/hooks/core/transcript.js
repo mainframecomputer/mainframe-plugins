@@ -1,25 +1,24 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { isJsonRecord } from "./json.js";
-export const MAX_TRANSCRIPT_BYTES = 5 * 1024 * 1024;
+const MAX_TRANSCRIPT_BYTES = 5 * 1024 * 1024;
 const MIN_EPOCH_SECONDS = 946_684_800;
 const MAX_EPOCH_SECONDS = 4_102_444_800;
 const MIN_EPOCH_MS = MIN_EPOCH_SECONDS * 1000;
 const MAX_EPOCH_MS = MAX_EPOCH_SECONDS * 1000;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 const MAINFRAME_VIDEO_URL_PREFIX = "https://mainframe.app/v/";
-export function readTranscriptText(path) {
-    try {
-        const stat = lstatSync(path);
-        if (!stat.isFile() || stat.size > MAX_TRANSCRIPT_BYTES) {
-            return null;
-        }
-        return readFileSync(path, "utf8");
+export function summarizeTranscriptFile(path, parseRows) {
+    const text = readTranscriptText(path);
+    if (text === null) {
+        return { kind: "unreadable" };
     }
-    catch {
-        return null;
-    }
+    return summarizeTranscript(text, parseRows);
 }
-export function summaryFromParsed(parsed) {
+export function summarizeTranscript(text, parseRows) {
+    const parsed = parseRows(text);
+    if (parsed === "unreadable") {
+        return { kind: "unreadable" };
+    }
     if (!parsed.sawUser) {
         return { kind: "no-user" };
     }
@@ -32,6 +31,18 @@ export function summaryFromParsed(parsed) {
         workHappened: parsed.workHappened,
         alreadyShared: parsed.alreadyShared,
     };
+}
+function readTranscriptText(path) {
+    try {
+        const stat = lstatSync(path);
+        if (!stat.isFile() || stat.size > MAX_TRANSCRIPT_BYTES) {
+            return null;
+        }
+        return readFileSync(path, "utf8");
+    }
+    catch {
+        return null;
+    }
 }
 export function isNonEmptyString(value) {
     return typeof value === "string" && value.trim() !== "";

@@ -1,18 +1,10 @@
-import { hasMainframeVideoUrl, isNonEmptyString, parseTimestampMs, readTranscriptText, summaryFromParsed, } from "../core/transcript.js";
+import { hasMainframeVideoUrl, isNonEmptyString, parseTimestampMs, summarizeTranscript, summarizeTranscriptFile, } from "../core/transcript.js";
 import { isJsonRecord } from "../core/json.js";
 export function summarizeCursorTranscriptFile(path) {
-    const text = readTranscriptText(path);
-    if (text === null) {
-        return { kind: "unreadable" };
-    }
-    return summarizeCursorTranscript(text);
+    return summarizeTranscriptFile(path, parseCursorRows);
 }
 export function summarizeCursorTranscript(text) {
-    const parsed = parseCursorRows(text);
-    if (parsed === "unreadable") {
-        return { kind: "unreadable" };
-    }
-    return summaryFromParsed(parsed);
+    return summarizeTranscript(text, parseCursorRows);
 }
 function parseCursorRows(text) {
     let sawUser = false;

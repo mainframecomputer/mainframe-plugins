@@ -3,34 +3,20 @@ import {
   isNonEmptyString,
   type ParsedTranscript,
   parseTimestampMs,
-  readTranscriptText,
-  summaryFromParsed,
+  summarizeTranscript,
+  summarizeTranscriptFile,
   type TranscriptSummary,
 } from "../core/transcript.js";
 import { isJsonRecord, type JsonRecord } from "../core/json.js";
 
-type CodexRowKind =
-  | { kind: "session-meta" }
-  | { kind: "user" }
-  | { kind: "work" }
-  | { kind: "other" };
+type CodexRowKind = "session-meta" | "user" | "work" | "other";
 
 export function summarizeCodexTranscriptFile(path: string): TranscriptSummary {
-  const text = readTranscriptText(path);
-  if (text === null) {
-    return { kind: "unreadable" };
-  }
-
-  return summarizeCodexTranscript(text);
+  return summarizeTranscriptFile(path, parseCodexRows);
 }
 
 export function summarizeCodexTranscript(text: string): TranscriptSummary {
-  const parsed = parseCodexRows(text);
-  if (parsed === "unreadable") {
-    return { kind: "unreadable" };
-  }
-
-  return summaryFromParsed(parsed);
+  return summarizeTranscript(text, parseCodexRows);
 }
 
 // Codex rollout files are append-only JSONL where every line is
@@ -61,13 +47,13 @@ function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
       return "unreadable";
     }
 
-    const row = classifyCodexRow(parsed);
-    if (row.kind === "session-meta") {
+    const kind = classifyCodexRow(parsed);
+    if (kind === "session-meta") {
       sawSessionMeta = true;
       continue;
     }
 
-    if (row.kind === "user") {
+    if (kind === "user") {
       sawUser = true;
       lastUserTimeMs = parseTimestampMs(parsed.timestamp);
       workHappened = false;
@@ -76,7 +62,7 @@ function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
     }
 
     if (sawUser) {
-      workHappened = workHappened || row.kind === "work";
+      workHappened = workHappened || kind === "work";
       alreadyShared = alreadyShared || hasMainframeVideoUrl(parsed);
     }
   }
@@ -90,12 +76,12 @@ function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
 
 function classifyCodexRow(record: JsonRecord): CodexRowKind {
   if (record.type === "session_meta") {
-    return { kind: "session-meta" };
+    return "session-meta";
   }
 
   const payload = record.payload;
   if (!isJsonRecord(payload)) {
-    return { kind: "other" };
+    return "other";
   }
 
   if (
@@ -103,12 +89,12 @@ function classifyCodexRow(record: JsonRecord): CodexRowKind {
     payload.type === "user_message" &&
     isNonEmptyString(payload.message)
   ) {
-    return { kind: "user" };
+    return "user";
   }
 
   if (record.type === "response_item" && payload.type === "function_call") {
-    return { kind: "work" };
+    return "work";
   }
 
-  return { kind: "other" };
+  return "other";
 }

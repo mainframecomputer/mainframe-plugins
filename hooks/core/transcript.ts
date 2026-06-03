@@ -2,7 +2,7 @@ import { lstatSync, readFileSync } from "node:fs";
 
 import { isJsonRecord } from "./json.js";
 
-export const MAX_TRANSCRIPT_BYTES = 5 * 1024 * 1024;
+const MAX_TRANSCRIPT_BYTES = 5 * 1024 * 1024;
 const MIN_EPOCH_SECONDS = 946_684_800;
 const MAX_EPOCH_SECONDS = 4_102_444_800;
 const MIN_EPOCH_MS = MIN_EPOCH_SECONDS * 1000;
@@ -29,20 +29,32 @@ export type ParsedTranscript = {
   alreadyShared: boolean;
 };
 
-export function readTranscriptText(path: string): string | null {
-  try {
-    const stat = lstatSync(path);
-    if (!stat.isFile() || stat.size > MAX_TRANSCRIPT_BYTES) {
-      return null;
-    }
+// A host adds support by supplying one of these: it turns transcript text into
+// a `ParsedTranscript`, or fails closed with "unreadable". The shared file
+// reading, size guarding, and summary shaping below are host-agnostic.
+export type TranscriptRowParser = (text: string) => ParsedTranscript | "unreadable";
 
-    return readFileSync(path, "utf8");
-  } catch {
-    return null;
+export function summarizeTranscriptFile(
+  path: string,
+  parseRows: TranscriptRowParser,
+): TranscriptSummary {
+  const text = readTranscriptText(path);
+  if (text === null) {
+    return { kind: "unreadable" };
   }
+
+  return summarizeTranscript(text, parseRows);
 }
 
-export function summaryFromParsed(parsed: ParsedTranscript): TranscriptSummary {
+export function summarizeTranscript(
+  text: string,
+  parseRows: TranscriptRowParser,
+): TranscriptSummary {
+  const parsed = parseRows(text);
+  if (parsed === "unreadable") {
+    return { kind: "unreadable" };
+  }
+
   if (!parsed.sawUser) {
     return { kind: "no-user" };
   }
@@ -57,6 +69,19 @@ export function summaryFromParsed(parsed: ParsedTranscript): TranscriptSummary {
     workHappened: parsed.workHappened,
     alreadyShared: parsed.alreadyShared,
   };
+}
+
+function readTranscriptText(path: string): string | null {
+  try {
+    const stat = lstatSync(path);
+    if (!stat.isFile() || stat.size > MAX_TRANSCRIPT_BYTES) {
+      return null;
+    }
+
+    return readFileSync(path, "utf8");
+  } catch {
+    return null;
+  }
 }
 
 export function isNonEmptyString(value: unknown): value is string {

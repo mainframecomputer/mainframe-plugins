@@ -3,8 +3,8 @@ import {
   isNonEmptyString,
   type ParsedTranscript,
   parseTimestampMs,
-  readTranscriptText,
-  summaryFromParsed,
+  summarizeTranscript,
+  summarizeTranscriptFile,
   type TranscriptSummary,
 } from "../core/transcript.js";
 import { isJsonRecord, type JsonRecord } from "../core/json.js";
@@ -16,21 +16,11 @@ type CursorTranscriptRow =
   | { event: "user_message"; timestamp: unknown };
 
 export function summarizeCursorTranscriptFile(path: string): TranscriptSummary {
-  const text = readTranscriptText(path);
-  if (text === null) {
-    return { kind: "unreadable" };
-  }
-
-  return summarizeCursorTranscript(text);
+  return summarizeTranscriptFile(path, parseCursorRows);
 }
 
 export function summarizeCursorTranscript(text: string): TranscriptSummary {
-  const parsed = parseCursorRows(text);
-  if (parsed === "unreadable") {
-    return { kind: "unreadable" };
-  }
-
-  return summaryFromParsed(parsed);
+  return summarizeTranscript(text, parseCursorRows);
 }
 
 function parseCursorRows(text: string): ParsedTranscript | "unreadable" {
