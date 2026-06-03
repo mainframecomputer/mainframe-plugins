@@ -5,39 +5,61 @@ const MIN_EPOCH_SECONDS = 946_684_800;
 const MAX_EPOCH_SECONDS = 4_102_444_800;
 const MIN_EPOCH_MS = MIN_EPOCH_SECONDS * 1000;
 const MAX_EPOCH_MS = MAX_EPOCH_SECONDS * 1000;
-const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 const MAINFRAME_VIDEO_URL_PREFIX = "https://mainframe.app/v/";
-export function summarizeTranscriptFile(path) {
-    try {
-        const stat = lstatSync(path);
-        if (!stat.isFile() || stat.size > MAX_TRANSCRIPT_BYTES) {
-            return { kind: "unreadable" };
-        }
-        return summarizeTranscript(readFileSync(path, "utf8"));
-    }
-    catch {
+export function summarizeTranscriptFile(path, parseRows) {
+    const text = readTranscriptText(path);
+    if (text === null) {
         return { kind: "unreadable" };
     }
+    return summarizeTranscript(text, parseRows);
 }
-export function summarizeTranscript(text) {
-    const summary = summarizeCursorRows(text);
-    if (summary.kind === "unreadable") {
-        return summary;
+export function summarizeTranscript(text, parseRows) {
+    const parsed = parseRows(text);
+    if (parsed === "unreadable") {
+        return { kind: "unreadable" };
     }
-    if (!summary.sawUser) {
+    if (!parsed.sawUser) {
         return { kind: "no-user" };
     }
-    if (summary.lastUserTimeMs === null) {
+    if (parsed.lastUserTimeMs === null) {
         return { kind: "missing-user-time" };
     }
     return {
         kind: "ready",
-        lastUserTimeMs: summary.lastUserTimeMs,
-        workHappened: summary.workHappened,
-        alreadyShared: summary.alreadyShared,
+        lastUserTimeMs: parsed.lastUserTimeMs,
+        workHappened: parsed.workHappened,
+        alreadyShared: parsed.alreadyShared,
     };
 }
-function parseTimestampMs(value) {
+function readTranscriptText(path) {
+    try {
+        const stat = lstatSync(path);
+        if (!stat.isFile() || stat.size > MAX_TRANSCRIPT_BYTES) {
+            return null;
+        }
+        return readFileSync(path, "utf8");
+    }
+    catch {
+        return null;
+    }
+}
+export function isNonEmptyString(value) {
+    return typeof value === "string" && value.trim() !== "";
+}
+// Advance the user-message time cursor while enforcing non-decreasing order.
+// Returns the parsed time (which may be null when absent/ambiguous), or
+// "unreadable" when a user timestamp moves backwards: transcripts are
+// append-only, so a regression means the input can't be trusted and the hook
+// must fail closed. Shared so every host applies the same ordering rule.
+export function nextUserTimeMs(rawTimestamp, previousUserTimeMs) {
+    const userTimeMs = parseTimestampMs(rawTimestamp);
+    if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+        return "unreadable";
+    }
+    return userTimeMs;
+}
+export function parseTimestampMs(value) {
     if (typeof value === "number" && Number.isFinite(value)) {
         return normalizeEpochMs(value);
     }
@@ -59,96 +81,7 @@ function parseTimestampMs(value) {
     }
     return null;
 }
-function summarizeCursorRows(text) {
-    let sawUser = false;
-    let lastUserTimeMs = null;
-    let workHappened = false;
-    let alreadyShared = false;
-    let previousUserTimeMs = null;
-    for (const line of text.split(/\r?\n/)) {
-        const trimmed = line.trim();
-        if (trimmed === "") {
-            continue;
-        }
-        try {
-            const parsed = JSON.parse(trimmed);
-            if (!isJsonRecord(parsed)) {
-                return { kind: "unreadable" };
-            }
-            const row = parseCursorTranscriptRow(parsed);
-            if (row === null) {
-                return { kind: "unreadable" };
-            }
-            if (row.event === "user_message") {
-                const userTimeMs = parseTimestampMs(row.timestamp);
-                if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
-                    return { kind: "unreadable" };
-                }
-                sawUser = true;
-                lastUserTimeMs = userTimeMs;
-                if (userTimeMs !== null) {
-                    previousUserTimeMs = userTimeMs;
-                }
-                workHappened = false;
-                alreadyShared = false;
-                continue;
-            }
-            if (sawUser) {
-                const workTimeMs = readToolWorkTimeMs(row, lastUserTimeMs);
-                if (workTimeMs === "unreadable") {
-                    return { kind: "unreadable" };
-                }
-                workHappened = workHappened || workTimeMs !== null;
-                alreadyShared = alreadyShared || hasMainframeVideoUrl(parsed);
-            }
-        }
-        catch {
-            return { kind: "unreadable" };
-        }
-    }
-    return { kind: "parsed", sawUser, lastUserTimeMs, workHappened, alreadyShared };
-}
-function parseCursorTranscriptRow(record) {
-    if (record.event === "user_message" && isNonEmptyString(record.text)) {
-        return { event: record.event, timestamp: record.timestamp };
-    }
-    if (record.event === "tool_call" && typeof record.name === "string") {
-        return { event: record.event, timestamp: record.timestamp };
-    }
-    if (record.event === "assistant_message") {
-        return { event: record.event };
-    }
-    if (record.event === "tool_result") {
-        return { event: record.event };
-    }
-    return null;
-}
-function isNonEmptyString(value) {
-    return typeof value === "string" && value.trim() !== "";
-}
-function readToolWorkTimeMs(row, lastUserTimeMs) {
-    if (row.event !== "tool_call") {
-        return null;
-    }
-    const toolTimeMs = parseTimestampMs(row.timestamp);
-    if (toolTimeMs === null) {
-        return "unreadable";
-    }
-    if (lastUserTimeMs !== null && toolTimeMs < lastUserTimeMs) {
-        return "unreadable";
-    }
-    return toolTimeMs;
-}
-function normalizeEpochMs(value) {
-    if (value >= MIN_EPOCH_SECONDS && value <= MAX_EPOCH_SECONDS) {
-        return Math.round(value * 1000);
-    }
-    if (value >= MIN_EPOCH_MS && value <= MAX_EPOCH_MS) {
-        return Math.round(value);
-    }
-    return null;
-}
-function hasMainframeVideoUrl(value) {
+export function hasMainframeVideoUrl(value) {
     if (typeof value === "string") {
         return value.includes(MAINFRAME_VIDEO_URL_PREFIX);
     }
@@ -159,4 +92,13 @@ function hasMainframeVideoUrl(value) {
         return Object.values(value).some((entry) => hasMainframeVideoUrl(entry));
     }
     return false;
+}
+function normalizeEpochMs(value) {
+    if (value >= MIN_EPOCH_SECONDS && value <= MAX_EPOCH_SECONDS) {
+        return Math.round(value * 1000);
+    }
+    if (value >= MIN_EPOCH_MS && value <= MAX_EPOCH_MS) {
+        return Math.round(value);
+    }
+    return null;
 }

@@ -12,7 +12,7 @@ import { spawnSync } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
 
 import { z } from "zod";
-import { assertCursorOnlyPackageSurface } from "./package-surface.js";
+import { assertPluginPackageSurface } from "./package-surface.js";
 
 const PackageSchema = z.object({
   name: z.string().min(1),
@@ -27,9 +27,18 @@ const PluginManifestSchema = z.object({
   skills: z.string().min(1),
 });
 
+const CodexManifestSchema = z.object({
+  hooks: z.string().min(1),
+  mcpServers: z.string().min(1),
+  skills: z.string().min(1),
+});
+
 const packageJson = PackageSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
 const pluginManifest = PluginManifestSchema.parse(
   JSON.parse(readFileSync(".cursor-plugin/plugin.json", "utf8")),
+);
+const codexManifest = CodexManifestSchema.parse(
+  JSON.parse(readFileSync(".codex-plugin/plugin.json", "utf8")),
 );
 const archiveName = `${packageJson.name.replace(/^@/, "").replace("/", "-")}-${packageJson.version}.tgz`;
 const releaseDir = resolve("release");
@@ -47,9 +56,12 @@ const manifestPaths = [
   pluginManifest.logo,
   pluginManifest.mcpServers,
   pluginManifest.skills,
+  codexManifest.hooks,
+  codexManifest.mcpServers,
+  codexManifest.skills,
 ].map((path) => path.replace(/^\.\//, ""));
 
-assertCursorOnlyPackageSurface(packageJson.files);
+assertPluginPackageSurface(packageJson.files);
 
 for (const path of manifestPaths) {
   if (!existsSync(path)) {

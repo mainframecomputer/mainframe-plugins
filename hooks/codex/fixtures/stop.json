@@ -1,0 +1,11 @@
+{
+  "session_id": "session-123",
+  "transcript_path": null,
+  "cwd": "/workspace/mainframe-plugins",
+  "hook_event_name": "Stop",
+  "model": "gpt-5.5-codex",
+  "permission_mode": "default",
+  "turn_id": "turn-456",
+  "stop_hook_active": false,
+  "last_assistant_message": "Build finished."
+}

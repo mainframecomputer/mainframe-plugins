@@ -1,12 +1,10 @@
 import { evaluateAfkGate } from "./afk-gate.js";
-import { summarizeTranscriptFile } from "./transcript.js";
-export function evaluateStopPolicy(input) {
-    const summary = summarizeTranscriptFile(input.transcriptPath);
+export function decideStop(summary, stopTimeMs) {
     if (summary.kind !== "ready") {
         return { kind: "skip" };
     }
     const gate = evaluateAfkGate({
-        stopTimeMs: input.stopTimeMs,
+        stopTimeMs,
         lastUserTimeMs: summary.lastUserTimeMs,
         workHappened: summary.workHappened,
         alreadyShared: summary.alreadyShared,

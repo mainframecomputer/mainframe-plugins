@@ -1,7 +1,6 @@
-import { readFileSync } from "node:fs";
-
-import { evaluateStopPolicy } from "../core/stop-policy.js";
+import { decideStop } from "../core/stop-policy.js";
 import { parseJsonRecord } from "../core/json.js";
+import { summarizeCursorTranscriptFile } from "./transcript.js";
 
 export type CursorStopEvaluationInput = {
   stdin: string;
@@ -16,21 +15,13 @@ export function evaluateCursorStopHook(input: CursorStopEvaluationInput): Cursor
     return {};
   }
 
-  const decision = evaluateStopPolicy({
-    transcriptPath: hookInput.transcriptPath,
-    stopTimeMs: input.nowMs ?? Date.now(),
-  });
+  const summary = summarizeCursorTranscriptFile(hookInput.transcriptPath);
+  const decision = decideStop(summary, input.nowMs ?? Date.now());
   if (decision.kind === "skip") {
     return {};
   }
 
   return { followup_message: decision.message };
-}
-
-export function runCursorStopHookCli(): void {
-  const stdin = readFileSync(0, "utf8");
-  const output = evaluateCursorStopHook({ stdin });
-  process.stdout.write(`${JSON.stringify(output)}\n`);
 }
 
 function parseCursorStopInput(stdin: string): { transcriptPath: string; loopCount: number } | null {

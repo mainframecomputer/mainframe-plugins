@@ -1,20 +1,22 @@
 # Agent notes
 
-This repository packages the Mainframe Cursor plugin. Keep it focused on the Cursor
-manifest, hosted MCP wiring, the `share-video` skill, and the stop hook.
+This repository packages the Mainframe Cursor and Codex plugins. Keep it focused on the
+Cursor and Codex manifests, hosted MCP wiring, the `share-video` skill, and the stop hooks.
 
 ## Repository boundaries
 
 - User-visible copy should say "Mainframe", not legacy product names.
 - Do not add secrets, customer data, private URLs, or private business context.
-- Do not add non-Cursor host surfaces unless the product task explicitly asks for them.
+- Cursor and Codex are the supported hosts. Both plugins share the repo root, the
+  `share-video` skill, the `./.mcp.json` wiring, and the `hooks/core` runtime. Do not add
+  other host surfaces unless the product task explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
-- Generated Cursor manifest and marketplace files come from `tooling/generate.ts`; edit
-  the config there, then run `bun run generate`.
+- Generated Cursor and Codex manifest and marketplace files come from `tooling/generate.ts`;
+  edit the config there, then run `bun run generate`.
 - The canonical skill is `skills/share-video/SKILL.md`.
-- Keep generated metadata in `.cursor-plugin/`. Do not add package-local docs
-  or extra top-level markdown unless the user asks; improve `README.md` or this
-  file instead.
+- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, and `.agents/plugins/`. Do
+  not add package-local docs or extra top-level markdown unless the user asks; improve
+  `README.md` or this file instead.
 
 ## Start here
 

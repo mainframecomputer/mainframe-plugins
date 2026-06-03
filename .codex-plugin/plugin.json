@@ -1,0 +1,24 @@
+{
+  "name": "mainframe",
+  "version": "0.1.0",
+  "description": "Create and share short video updates from agent work.",
+  "author": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "homepage": "https://mainframe.app",
+  "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
+  "license": "UNLICENSED",
+  "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/codex/hooks.json",
+  "interface": {
+    "displayName": "Mainframe",
+    "shortDescription": "Create and share short video updates from agent work.",
+    "longDescription": "Watch what your agents did instead of reading through all of it. Each task wraps up with a short narrated video in your own voice and company branding, so you stay up to date at a glance and can share it with your team.",
+    "developerName": "Mainframe",
+    "category": "Productivity",
+    "logo": "./assets/logo.png"
+  }
+}

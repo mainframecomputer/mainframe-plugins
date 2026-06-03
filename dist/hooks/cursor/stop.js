@@ -1,3 +1,4 @@
 #!/usr/bin/env node
-import { runCursorStopHookCli } from "./stop-evaluator.js";
-runCursorStopHookCli();
+import { runStopHookCli } from "../core/run-stop-hook.js";
+import { evaluateCursorStopHook } from "./stop-evaluator.js";
+runStopHookCli(evaluateCursorStopHook);

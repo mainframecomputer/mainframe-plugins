@@ -8,9 +8,12 @@ const JsonRecordSchema = z.record(z.string(), z.unknown());
 
 const MetadataSchema = z.object({
   name: z.string().min(1),
+  displayName: z.string().min(1),
   packageName: z.string().min(1),
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
   description: z.string().min(1),
+  longDescription: z.string().min(1),
+  category: z.string().min(1),
   author: z.object({
     name: z.string().min(1),
     email: z.string().email(),
@@ -24,11 +27,18 @@ const MetadataSchema = z.object({
   skillDirectory: z.string().min(1),
 });
 
+const CURSOR_HOOKS = "./hooks/cursor/hooks.json";
+const CODEX_HOOKS = "./hooks/codex/hooks.json";
+
 const metadata = MetadataSchema.parse({
   name: "mainframe",
+  displayName: "Mainframe",
   packageName: "@mainframe/plugins",
   version: "0.1.0",
-  description: "Create and share short Mainframe video updates from coding-agent work.",
+  description: "Create and share short video updates from agent work.",
+  longDescription:
+    "Watch what your agents did instead of reading through all of it. Each task wraps up with a short narrated video in your own voice and company branding, so you stay up to date at a glance and can share it with your team.",
+  category: "Productivity",
   author: {
     name: "Mainframe",
     email: "support@mainframe.app",
@@ -51,22 +61,25 @@ const sharedManifest = {
   repository: metadata.repository,
   license: metadata.license,
   keywords: metadata.keywords,
-  logo: metadata.logo,
-  skills: metadata.skillDirectory,
-  mcpServers: metadata.mcpServers,
 };
 
 function main(): void {
   writeJson(".cursor-plugin/plugin.json", {
     ...sharedManifest,
-    hooks: "./hooks/cursor/hooks.json",
+    logo: metadata.logo,
+    skills: metadata.skillDirectory,
+    mcpServers: metadata.mcpServers,
+    hooks: CURSOR_HOOKS,
   });
+  writeJson(".cursor-plugin/marketplace.json", cursorMarketplace());
 
-  writeJson(".cursor-plugin/marketplace.json", marketplace());
+  writeJson(".codex-plugin/plugin.json", codexManifest());
+  writeJson(".agents/plugins/marketplace.json", codexMarketplace());
+
   updatePackageJson();
 }
 
-function marketplace() {
+function cursorMarketplace() {
   return {
     name: metadata.name,
     owner: metadata.author,
@@ -83,11 +96,56 @@ function marketplace() {
   };
 }
 
+function codexManifest() {
+  return {
+    ...sharedManifest,
+    skills: metadata.skillDirectory,
+    mcpServers: metadata.mcpServers,
+    hooks: CODEX_HOOKS,
+    interface: {
+      displayName: metadata.displayName,
+      shortDescription: metadata.description,
+      longDescription: metadata.longDescription,
+      developerName: metadata.author.name,
+      category: metadata.category,
+      logo: `./${metadata.logo}`,
+    },
+  };
+}
+
+// Codex resolves a marketplace's local plugin sources from a subdirectory, so we
+// point the entry at the repository root through a Git URL source. That keeps the
+// Codex plugin rooted alongside the Cursor plugin and sharing the same skill,
+// MCP wiring, and hook runtime instead of duplicating them into a subfolder.
+function codexMarketplace() {
+  return {
+    name: metadata.name,
+    interface: {
+      displayName: metadata.displayName,
+    },
+    plugins: [
+      {
+        name: metadata.name,
+        source: {
+          source: "url",
+          url: metadata.repository,
+        },
+        policy: {
+          installation: "AVAILABLE",
+          authentication: "ON_INSTALL",
+        },
+        category: metadata.category,
+      },
+    ],
+  };
+}
+
 function updatePackageJson(): void {
   const packageJson = JsonRecordSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
   packageJson.name = metadata.packageName;
   packageJson.version = metadata.version;
-  packageJson.description = "Mainframe Cursor plugin manifest, skill, MCP wiring, and stop hook.";
+  packageJson.description =
+    "Mainframe Cursor and Codex plugin manifests, skill, MCP wiring, and stop hooks.";
   packageJson.private = true;
   packageJson.license = metadata.license;
   packageJson.homepage = metadata.homepage;
@@ -98,6 +156,7 @@ function updatePackageJson(): void {
   packageJson.keywords = metadata.keywords;
   packageJson.bin = {
     "mainframe-hook-cursor": "./dist/hooks/cursor/stop.js",
+    "mainframe-hook-codex": "./dist/hooks/codex/stop.js",
   };
   packageJson.files = PACKAGE_FILES;
 

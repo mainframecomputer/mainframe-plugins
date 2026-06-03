@@ -1,0 +1,4 @@
+{"timestamp":"2026-05-08T12:55:00.000Z","type":"session_meta","payload":{"id":"session-123","timestamp":"2026-05-08T12:55:00.000Z","cwd":"/workspace/mainframe-plugins","originator":"codex","cli_version":"0.130.0"}}
+{"timestamp":"2026-05-08T13:00:00.000Z","type":"event_msg","payload":{"type":"user_message","message":"Please implement this. SECRET_NEVER_LEAK","kind":"plain"}}
+{"timestamp":"2026-05-08T13:05:00.000Z","type":"response_item","payload":{"type":"function_call","name":"shell","arguments":"{\"command\":\"bun run build\"}","call_id":"call_1"}}
+{"timestamp":"2026-05-08T14:10:00.000Z","type":"event_msg","payload":{"type":"agent_message","message":"Build finished."}}

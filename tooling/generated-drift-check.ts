@@ -4,6 +4,8 @@ import { spawnSync } from "node:child_process";
 const generatedPaths = [
   ".cursor-plugin/plugin.json",
   ".cursor-plugin/marketplace.json",
+  ".codex-plugin/plugin.json",
+  ".agents/plugins/marketplace.json",
   "package.json",
 ];
 

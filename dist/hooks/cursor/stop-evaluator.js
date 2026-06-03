@@ -1,24 +1,17 @@
-import { readFileSync } from "node:fs";
-import { evaluateStopPolicy } from "../core/stop-policy.js";
+import { decideStop } from "../core/stop-policy.js";
 import { parseJsonRecord } from "../core/json.js";
+import { summarizeCursorTranscriptFile } from "./transcript.js";
 export function evaluateCursorStopHook(input) {
     const hookInput = parseCursorStopInput(input.stdin);
     if (hookInput === null || hookInput.loopCount > 0) {
         return {};
     }
-    const decision = evaluateStopPolicy({
-        transcriptPath: hookInput.transcriptPath,
-        stopTimeMs: input.nowMs ?? Date.now(),
-    });
+    const summary = summarizeCursorTranscriptFile(hookInput.transcriptPath);
+    const decision = decideStop(summary, input.nowMs ?? Date.now());
     if (decision.kind === "skip") {
         return {};
     }
     return { followup_message: decision.message };
-}
-export function runCursorStopHookCli() {
-    const stdin = readFileSync(0, "utf8");
-    const output = evaluateCursorStopHook({ stdin });
-    process.stdout.write(`${JSON.stringify(output)}\n`);
 }
 function parseCursorStopInput(stdin) {
     const input = parseJsonRecord(stdin);

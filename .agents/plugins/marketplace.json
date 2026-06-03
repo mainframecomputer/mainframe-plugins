@@ -1,0 +1,20 @@
+{
+  "name": "mainframe",
+  "interface": {
+    "displayName": "Mainframe"
+  },
+  "plugins": [
+    {
+      "name": "mainframe",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/mainframecomputer/mainframe-plugins.git"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
