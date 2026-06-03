@@ -45,6 +45,37 @@ describe("summarizeCodexTranscript", () => {
     });
   });
 
+  it("counts work done through non-function Codex tool-call types", () => {
+    for (const callType of ["local_shell_call", "custom_tool_call", "web_search_call"]) {
+      const summary = summarizeCodexTranscript(
+        codexRollout([
+          sessionMeta,
+          userMessage("2026-05-08T13:00:00.000Z", "please work on this"),
+          {
+            timestamp: "2026-05-08T13:05:00.000Z",
+            type: "response_item",
+            payload: { type: callType, call_id: "call_1" },
+          },
+        ]),
+      );
+
+      expect(summary).toMatchObject({ kind: "ready", workHappened: true });
+    }
+  });
+
+  it("treats out-of-order user timestamps as unreadable", () => {
+    expect(
+      summarizeCodexTranscript(
+        codexRollout([
+          sessionMeta,
+          userMessage("2026-05-08T15:00:00.000Z", "latest request"),
+          userMessage("2026-05-08T13:00:00.000Z", "older request emitted later"),
+          functionCall("2026-05-08T13:05:00.000Z"),
+        ]),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
   it("ignores unrelated rollout event types", () => {
     const summary = summarizeCodexTranscript(
       codexRollout([

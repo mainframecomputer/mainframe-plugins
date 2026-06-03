@@ -8,9 +8,10 @@ export function summarizeCodexTranscript(text) {
 }
 // Codex rollout files are append-only JSONL where every line is
 // `{ timestamp, type, payload }`. The format carries many event types that are
-// irrelevant here, so unrecognized-but-valid rows are ignored. Structural
-// corruption (non-JSON or non-object rows) and the absence of a `session_meta`
-// row fail closed so the hook never fires on an untrusted transcript.
+// irrelevant here, so unrecognized-but-valid rows are ignored. Anything that
+// makes the transcript untrustworthy fails closed (returns "unreadable" so the
+// hook never fires): non-JSON or non-object rows, a missing `session_meta` row,
+// or user timestamps that move backwards.
 function parseCodexRows(text) {
     const records = parseJsonlRecords(text);
     if (records === "unreadable") {
@@ -21,6 +22,7 @@ function parseCodexRows(text) {
     let lastUserTimeMs = null;
     let workHappened = false;
     let alreadyShared = false;
+    let previousUserTimeMs = null;
     for (const record of records) {
         const kind = classifyCodexRow(record);
         if (kind === "session-meta") {
@@ -28,8 +30,15 @@ function parseCodexRows(text) {
             continue;
         }
         if (kind === "user") {
+            const userTimeMs = parseTimestampMs(record.timestamp);
+            if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+                return "unreadable";
+            }
             sawUser = true;
-            lastUserTimeMs = parseTimestampMs(record.timestamp);
+            lastUserTimeMs = userTimeMs;
+            if (userTimeMs !== null) {
+                previousUserTimeMs = userTimeMs;
+            }
             workHappened = false;
             alreadyShared = false;
             continue;
@@ -57,8 +66,16 @@ function classifyCodexRow(record) {
         isNonEmptyString(payload.message)) {
         return "user";
     }
-    if (record.type === "response_item" && payload.type === "function_call") {
+    if (record.type === "response_item" && isToolCallType(payload.type)) {
         return "work";
     }
     return "other";
+}
+// Responses API tool invocations are persisted as `response_item` rows whose
+// payload type ends in `_call` (`function_call`, `local_shell_call`,
+// `custom_tool_call`, `web_search_call`, ...). Match the whole family so work
+// done through any tool counts, not just plain function calls. Result rows end
+// in `_output`, so they are excluded.
+function isToolCallType(type) {
+    return typeof type === "string" && type.endsWith("_call");
 }
