@@ -9,8 +9,7 @@ import {
   rmSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { basename, dirname, join } from "node:path";
-import { tmpdir } from "node:os";
+import { basename, dirname, join, resolve } from "node:path";
 
 import { z } from "zod";
 import { assertCursorOnlyPackageSurface } from "./package-surface.js";
@@ -33,8 +32,11 @@ const pluginManifest = PluginManifestSchema.parse(
   JSON.parse(readFileSync(".cursor-plugin/plugin.json", "utf8")),
 );
 const archiveName = `${packageJson.name.replace(/^@/, "").replace("/", "-")}-${packageJson.version}.tgz`;
-const archivePath = `release/${archiveName}`;
-const tempRoot = mkdtempSync(join(tmpdir(), "mainframe-plugin-release-"));
+const releaseDir = resolve("release");
+const archivePath = join(releaseDir, archiveName);
+const displayArchivePath = `release/${archiveName}`;
+mkdirSync(releaseDir, { recursive: true });
+const tempRoot = mkdtempSync(join(releaseDir, ".tmp-mainframe-plugin-release-"));
 const payloadDir = join(tempRoot, "payload");
 const tempArchivePath = join(tempRoot, archiveName);
 let tarExitCode = 0;
@@ -58,7 +60,6 @@ for (const path of manifestPaths) {
   }
 }
 
-mkdirSync("release", { recursive: true });
 mkdirSync(payloadDir, { recursive: true });
 
 try {
@@ -100,7 +101,7 @@ if (tarExitCode !== 0) {
   process.exit(tarExitCode);
 }
 
-console.log(archivePath);
+console.log(displayArchivePath);
 
 function isPackaged(path: string, packageFiles: readonly string[]): boolean {
   return packageFiles.some((entry) => path === entry || path.startsWith(`${entry}/`));
