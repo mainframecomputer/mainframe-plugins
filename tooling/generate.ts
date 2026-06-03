@@ -37,7 +37,7 @@ const metadata = MetadataSchema.parse({
   version: "0.1.0",
   description: "Create and share short video updates from agent work.",
   longDescription:
-    "Have your agents record short videos of what they did so you can stay up to date on their work at a glance. Each recap uses your own voice and company branding, and is shareable with your team.",
+    "Your agents record short videos of what they did, so you can stay up to date on their work at a glance. Each recap uses your own voice and company branding, and is shareable with your team.",
   category: "Productivity",
   author: {
     name: "Mainframe",
