@@ -19,9 +19,8 @@ npx skills add mainframecomputer/mainframe-plugins --list
 
 ### Cursor
 
-Install the Mainframe plugin from the Cursor marketplace. The plugin bundles the `share-video`
-skill, Mainframe MCP wiring, and a stop hook that suggests a short video update after meaningful
-agent work when the user has been away.
+Install the Mainframe plugin from the Cursor marketplace. It gives your agent the `share-video`
+skill and Mainframe tools so it can create and share short video updates of its work.
 
 ### Codex
 
@@ -32,8 +31,7 @@ browser in the Codex CLI:
 codex plugin marketplace add mainframecomputer/mainframe-plugins
 ```
 
-The Codex plugin bundles the same `share-video` skill, Mainframe MCP wiring, and stop hook as the
-Cursor plugin. Codex asks you to review and trust the bundled hook before it runs.
+The Codex plugin gives Codex the same `share-video` skill and Mainframe tools as the Cursor plugin.
 
 ## Included skill
 
