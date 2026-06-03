@@ -1,4 +1,4 @@
-import { hasMainframeVideoUrl, isNonEmptyString, parseTimestampMs, summarizeTranscript, summarizeTranscriptFile, } from "../core/transcript.js";
+import { hasMainframeVideoUrl, isNonEmptyString, nextUserTimeMs, summarizeTranscript, summarizeTranscriptFile, } from "../core/transcript.js";
 import { isJsonRecord, parseJsonlRecords } from "../core/json.js";
 export function summarizeCodexTranscriptFile(path) {
     return summarizeTranscriptFile(path, parseCodexRows);
@@ -30,8 +30,8 @@ function parseCodexRows(text) {
             continue;
         }
         if (kind === "user") {
-            const userTimeMs = parseTimestampMs(record.timestamp);
-            if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+            const userTimeMs = nextUserTimeMs(record.timestamp, previousUserTimeMs);
+            if (userTimeMs === "unreadable") {
                 return "unreadable";
             }
             sawUser = true;

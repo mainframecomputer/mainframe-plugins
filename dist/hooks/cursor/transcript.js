@@ -1,4 +1,4 @@
-import { hasMainframeVideoUrl, isNonEmptyString, parseTimestampMs, summarizeTranscript, summarizeTranscriptFile, } from "../core/transcript.js";
+import { hasMainframeVideoUrl, isNonEmptyString, nextUserTimeMs, parseTimestampMs, summarizeTranscript, summarizeTranscriptFile, } from "../core/transcript.js";
 import { parseJsonlRecords } from "../core/json.js";
 export function summarizeCursorTranscriptFile(path) {
     return summarizeTranscriptFile(path, parseCursorRows);
@@ -22,8 +22,8 @@ function parseCursorRows(text) {
             return "unreadable";
         }
         if (row.event === "user_message") {
-            const userTimeMs = parseTimestampMs(row.timestamp);
-            if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+            const userTimeMs = nextUserTimeMs(row.timestamp, previousUserTimeMs);
+            if (userTimeMs === "unreadable") {
                 return "unreadable";
             }
             sawUser = true;

@@ -1,6 +1,7 @@
 import {
   hasMainframeVideoUrl,
   isNonEmptyString,
+  nextUserTimeMs,
   type ParsedTranscript,
   parseTimestampMs,
   summarizeTranscript,
@@ -42,8 +43,8 @@ function parseCursorRows(text: string): ParsedTranscript | "unreadable" {
     }
 
     if (row.event === "user_message") {
-      const userTimeMs = parseTimestampMs(row.timestamp);
-      if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+      const userTimeMs = nextUserTimeMs(row.timestamp, previousUserTimeMs);
+      if (userTimeMs === "unreadable") {
         return "unreadable";
       }
 

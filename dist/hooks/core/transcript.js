@@ -47,6 +47,18 @@ function readTranscriptText(path) {
 export function isNonEmptyString(value) {
     return typeof value === "string" && value.trim() !== "";
 }
+// Advance the user-message time cursor while enforcing non-decreasing order.
+// Returns the parsed time (which may be null when absent/ambiguous), or
+// "unreadable" when a user timestamp moves backwards: transcripts are
+// append-only, so a regression means the input can't be trusted and the hook
+// must fail closed. Shared so every host applies the same ordering rule.
+export function nextUserTimeMs(rawTimestamp, previousUserTimeMs) {
+    const userTimeMs = parseTimestampMs(rawTimestamp);
+    if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+        return "unreadable";
+    }
+    return userTimeMs;
+}
 export function parseTimestampMs(value) {
     if (typeof value === "number" && Number.isFinite(value)) {
         return normalizeEpochMs(value);

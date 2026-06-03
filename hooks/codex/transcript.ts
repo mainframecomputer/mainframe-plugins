@@ -1,8 +1,8 @@
 import {
   hasMainframeVideoUrl,
   isNonEmptyString,
+  nextUserTimeMs,
   type ParsedTranscript,
-  parseTimestampMs,
   summarizeTranscript,
   summarizeTranscriptFile,
   type TranscriptSummary,
@@ -46,8 +46,8 @@ function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
     }
 
     if (kind === "user") {
-      const userTimeMs = parseTimestampMs(record.timestamp);
-      if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+      const userTimeMs = nextUserTimeMs(record.timestamp, previousUserTimeMs);
+      if (userTimeMs === "unreadable") {
         return "unreadable";
       }
 
