@@ -1,0 +1,17 @@
+{
+  "name": "mainframe",
+  "owner": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "metadata": {
+    "description": "Create and share short Mainframe video updates from coding-agent work."
+  },
+  "plugins": [
+    {
+      "name": "mainframe",
+      "source": ".",
+      "description": "Create and share short Mainframe video updates from coding-agent work."
+    }
+  ]
+}

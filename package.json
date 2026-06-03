@@ -1,0 +1,69 @@
+{
+  "name": "@mainframe/plugins",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mainframe Cursor plugin manifest, skill, MCP wiring, and stop hook.",
+  "keywords": [
+    "agent-skills",
+    "hooks",
+    "mainframe",
+    "mcp",
+    "video"
+  ],
+  "homepage": "https://mainframe.app",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mainframecomputer/mainframe-plugins.git"
+  },
+  "bin": {
+    "mainframe-hook-cursor": "./dist/hooks/cursor/stop.js"
+  },
+  "files": [
+    ".cursor-plugin",
+    ".mcp.json",
+    "LICENSE",
+    "README.md",
+    "assets/logo.png",
+    "dist",
+    "hooks/cursor/hooks.json",
+    "skills"
+  ],
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && bun tooling/mark-executable.ts",
+    "build:check": "bun run build && git diff --exit-code -- dist",
+    "generate": "bun tooling/generate.ts && oxfmt --write package.json .cursor-plugin",
+    "check:generated": "bun tooling/generated-drift-check.ts",
+    "archive:release": "bun run generate && bun run build && git diff --exit-code -- package.json .cursor-plugin dist && bun tooling/release-archive.ts",
+    "pack:release": "bun run verify && bun run archive:release",
+    "lint": "oxlint . --deny-warnings --report-unused-disable-directives",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "test": "vitest run",
+    "verify": "bun run check:generated && bun run typecheck && bun run build:check && bun run lint && bun run format:check && bun run test",
+    "verify:ci": "bun run generate && git diff --exit-code && bun run typecheck && bun run build:check && bun run lint && bun run format:check && bun run test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.3",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.63.0",
+    "oxlint-tsgolint": "^0.22.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5",
+    "zod": "^4.1.13"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}": [
+      "oxlint --fix --deny-warnings --report-unused-disable-directives",
+      "oxfmt --no-error-on-unmatched-pattern"
+    ],
+    "*.{json,jsonc,md,yaml,yml,css,html,svg}": "oxfmt --no-error-on-unmatched-pattern"
+  },
+  "packageManager": "bun@1.3.1"
+}

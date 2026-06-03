@@ -1,0 +1,19 @@
+export const MS_PER_HOUR = 3_600_000;
+export const DEFAULT_AFK_THRESHOLD_MS = MS_PER_HOUR;
+export function evaluateAfkGate(input) {
+    const elapsedMs = input.stopTimeMs - input.lastUserTimeMs;
+    if (elapsedMs < DEFAULT_AFK_THRESHOLD_MS) {
+        return { fire: false };
+    }
+    if (!input.workHappened) {
+        return { fire: false };
+    }
+    if (input.alreadyShared) {
+        return { fire: false };
+    }
+    const elapsedHours = (elapsedMs / MS_PER_HOUR).toFixed(1);
+    return {
+        fire: true,
+        reason: `The user has been away for about ${elapsedHours} hours while you worked. Consider using the share-video skill to leave a short Mainframe video summarizing what you did, then stop.`,
+    };
+}
