@@ -2,29 +2,39 @@ import { lstatSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 export const PACKAGE_FILES = [
+  ".agents",
+  ".codex-plugin",
   ".cursor-plugin",
   ".mcp.json",
   "LICENSE",
   "README.md",
   "assets/logo.png",
   "dist",
+  "hooks/codex/hooks.json",
   "hooks/cursor/hooks.json",
   "skills",
 ];
 
 export const SHIPPED_FILES = [
+  ".agents/plugins/marketplace.json",
+  ".codex-plugin/plugin.json",
   ".cursor-plugin/marketplace.json",
   ".cursor-plugin/plugin.json",
   ".mcp.json",
   "LICENSE",
   "README.md",
   "assets/logo.png",
+  "dist/hooks/codex/stop-evaluator.js",
+  "dist/hooks/codex/stop.js",
+  "dist/hooks/codex/transcript.js",
   "dist/hooks/core/afk-gate.js",
   "dist/hooks/core/json.js",
   "dist/hooks/core/stop-policy.js",
   "dist/hooks/core/transcript.js",
   "dist/hooks/cursor/stop-evaluator.js",
   "dist/hooks/cursor/stop.js",
+  "dist/hooks/cursor/transcript.js",
+  "hooks/codex/hooks.json",
   "hooks/cursor/hooks.json",
   "skills/share-video/SKILL.md",
 ];
@@ -38,19 +48,11 @@ export function readPackageFiles(path: string): string[] {
   return readdirSync(path).flatMap((entry) => readPackageFiles(join(path, entry)));
 }
 
-export function assertCursorOnlyPackageSurface(packageFiles: readonly string[]): void {
-  assertSameItems(
-    "Package files differ from the Cursor-only allowlist",
-    packageFiles,
-    PACKAGE_FILES,
-  );
+export function assertPluginPackageSurface(packageFiles: readonly string[]): void {
+  assertSameItems("Package files differ from the plugin allowlist", packageFiles, PACKAGE_FILES);
 
   const shippedFiles = packageFiles.flatMap(readPackageFiles);
-  assertSameItems(
-    "Shipped files differ from the Cursor-only allowlist",
-    shippedFiles,
-    SHIPPED_FILES,
-  );
+  assertSameItems("Shipped files differ from the plugin allowlist", shippedFiles, SHIPPED_FILES);
 }
 
 function assertSameItems(

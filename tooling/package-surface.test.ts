@@ -13,7 +13,7 @@ const PackageSchema = z
   })
   .passthrough();
 
-const HooksSchema = z
+const CursorHooksSchema = z
   .object({
     hooks: z.object({
       stop: z.tuple([
@@ -27,14 +27,34 @@ const HooksSchema = z
   })
   .passthrough();
 
+const CodexHooksSchema = z
+  .object({
+    hooks: z.object({
+      Stop: z.tuple([
+        z
+          .object({
+            hooks: z.tuple([
+              z
+                .object({
+                  command: z.string(),
+                })
+                .passthrough(),
+            ]),
+          })
+          .passthrough(),
+      ]),
+    }),
+  })
+  .passthrough();
+
 describe("package runtime surface", () => {
-  it("ships only the Cursor plugin package surface", () => {
+  it("ships only the allowlisted plugin package surface", () => {
     const packageJson = PackageSchema.parse(readJson("package.json"));
 
     expect(packageJson.files).toEqual(PACKAGE_FILES);
   });
 
-  it("ships only the expected Cursor plugin files", () => {
+  it("ships only the expected plugin files", () => {
     const packageJson = PackageSchema.parse(readJson("package.json"));
     const shippedFiles = packageJson.files.flatMap(readPackageFiles);
 
@@ -44,12 +64,28 @@ describe("package runtime surface", () => {
 
   it("ships the executable Cursor hook runtime referenced by hooks.json and package bin", () => {
     const packageJson = PackageSchema.parse(readJson("package.json"));
-    const hooks = HooksSchema.parse(readJson("hooks/cursor/hooks.json"));
+    const hooks = CursorHooksSchema.parse(readJson("hooks/cursor/hooks.json"));
 
-    const hookTarget = readCursorPluginRootNodeTarget(hooks.hooks.stop[0].command);
+    const hookTarget = readPluginRootNodeTarget(hooks.hooks.stop[0].command, "CURSOR_PLUGIN_ROOT");
     const binTargets = Object.values(packageJson.bin).map((target) => target.replace(/^\.\//, ""));
 
     expect(hookTarget).toBe("dist/hooks/cursor/stop.js");
+    expect(binTargets).toContain(hookTarget);
+    expect(isPackaged(hookTarget, packageJson.files)).toBe(true);
+    expect(statSync(hookTarget).mode & 0o111).not.toBe(0);
+  });
+
+  it("ships the executable Codex hook runtime referenced by hooks.json and package bin", () => {
+    const packageJson = PackageSchema.parse(readJson("package.json"));
+    const hooks = CodexHooksSchema.parse(readJson("hooks/codex/hooks.json"));
+
+    const hookTarget = readPluginRootNodeTarget(
+      hooks.hooks.Stop[0].hooks[0].command,
+      "PLUGIN_ROOT",
+    );
+    const binTargets = Object.values(packageJson.bin).map((target) => target.replace(/^\.\//, ""));
+
+    expect(hookTarget).toBe("dist/hooks/codex/stop.js");
     expect(binTargets).toContain(hookTarget);
     expect(isPackaged(hookTarget, packageJson.files)).toBe(true);
     expect(statSync(hookTarget).mode & 0o111).not.toBe(0);
@@ -68,8 +104,8 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
-function readCursorPluginRootNodeTarget(command: string): string {
-  const match = /^node "\$CURSOR_PLUGIN_ROOT\/(.+)"$/.exec(command);
+function readPluginRootNodeTarget(command: string, rootEnv: string): string {
+  const match = new RegExp(`^node "\\$${rootEnv}/(.+)"$`).exec(command);
   if (match === null) {
     throw new Error(`Unexpected hook command: ${command}`);
   }

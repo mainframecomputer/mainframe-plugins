@@ -1,0 +1,24 @@
+{
+  "name": "mainframe",
+  "version": "0.1.0",
+  "description": "Create and share short Mainframe video updates from coding-agent work.",
+  "author": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "homepage": "https://mainframe.app",
+  "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
+  "license": "UNLICENSED",
+  "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/codex/hooks.json",
+  "interface": {
+    "displayName": "Mainframe",
+    "shortDescription": "Create and share short Mainframe video updates from coding-agent work.",
+    "longDescription": "Mainframe adds a share-video skill, hosted MCP server wiring, and a stop hook that suggests a short video update after meaningful agent work when the user has been away.",
+    "developerName": "Mainframe",
+    "category": "Productivity",
+    "logo": "./assets/logo.png"
+  }
+}

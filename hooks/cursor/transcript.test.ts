@@ -4,11 +4,11 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { summarizeTranscript, summarizeTranscriptFile } from "./transcript.js";
+import { summarizeCursorTranscript, summarizeCursorTranscriptFile } from "./transcript.js";
 
-describe("summarizeTranscript", () => {
+describe("summarizeCursorTranscript", () => {
   it("summarizes Cursor tool work after the last user message", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T12:00:00.000Z",
@@ -38,7 +38,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("detects an existing Mainframe share from Cursor tool output", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
@@ -62,7 +62,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("detects an existing Mainframe share from MCP-style text output", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
@@ -93,7 +93,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("detects a Mainframe video URL without relying on the tool name", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
@@ -117,7 +117,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("detects Mainframe video URLs in assistant messages after work", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
@@ -146,7 +146,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("detects Mainframe video URLs in tool result rows", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
@@ -180,7 +180,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("does not treat a video URL in the latest user message as an existing share", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
@@ -204,7 +204,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("accepts numeric epoch seconds and milliseconds", () => {
-    const secondsSummary = summarizeTranscript(
+    const secondsSummary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: 1_746_710_400,
@@ -213,7 +213,7 @@ describe("summarizeTranscript", () => {
         },
       ]),
     );
-    const millisecondsSummary = summarizeTranscript(
+    const millisecondsSummary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: 1_746_710_400_000,
@@ -236,7 +236,7 @@ describe("summarizeTranscript", () => {
   it("rejects ambiguous timestamp strings", () => {
     for (const timestamp of ["2026", "05/08/2026", "2026-05-08"]) {
       expect(
-        summarizeTranscript(
+        summarizeCursorTranscript(
           cursorTranscript([
             {
               timestamp,
@@ -257,7 +257,7 @@ describe("summarizeTranscript", () => {
 
   it("treats out-of-order user timestamps as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         cursorTranscript([
           {
             timestamp: "2026-05-08T15:00:00.000Z",
@@ -282,7 +282,7 @@ describe("summarizeTranscript", () => {
 
   it("preserves valid user timestamp order across malformed user timestamps", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         cursorTranscript([
           {
             timestamp: "2026-05-08T15:00:00.000Z",
@@ -306,7 +306,7 @@ describe("summarizeTranscript", () => {
 
   it("reports missing user time when the latest user timestamp is malformed", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         cursorTranscript([
           {
             timestamp: "2026-05-08T13:00:00.000Z",
@@ -325,7 +325,7 @@ describe("summarizeTranscript", () => {
 
   it("treats post-user tool calls without timestamps as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         cursorTranscript([
           {
             timestamp: "2026-05-08T13:00:00.000Z",
@@ -344,7 +344,7 @@ describe("summarizeTranscript", () => {
 
   it("treats post-user tool calls with malformed timestamps as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         cursorTranscript([
           {
             timestamp: "2026-05-08T13:00:00.000Z",
@@ -364,7 +364,7 @@ describe("summarizeTranscript", () => {
 
   it("treats post-user tool calls with pre-user timestamps as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         cursorTranscript([
           {
             timestamp: "2026-05-08T13:00:00.000Z",
@@ -383,7 +383,7 @@ describe("summarizeTranscript", () => {
   });
 
   it("summarizes full transcripts instead of only a byte tail", () => {
-    const summary = summarizeTranscript(
+    const summary = summarizeCursorTranscript(
       cursorTranscript([
         {
           timestamp: "2026-05-08T13:00:00.000Z",
@@ -413,7 +413,7 @@ describe("summarizeTranscript", () => {
 
   it("treats non-Cursor transcript shapes as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         [
           JSON.stringify({
             timestamp: "2026-05-08T13:00:00.000Z",
@@ -431,7 +431,7 @@ describe("summarizeTranscript", () => {
 
   it("treats user message rows without text as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         JSON.stringify({
           timestamp: "2026-05-08T13:00:00.000Z",
           event: "user_message",
@@ -442,7 +442,7 @@ describe("summarizeTranscript", () => {
 
   it("treats unknown non-empty rows as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         cursorTranscript([
           {
             timestamp: "2026-05-08T13:00:00.000Z",
@@ -461,7 +461,7 @@ describe("summarizeTranscript", () => {
 
   it("treats corrupt non-empty JSONL as unreadable", () => {
     expect(
-      summarizeTranscript(
+      summarizeCursorTranscript(
         [
           JSON.stringify({
             timestamp: "2026-05-08T13:00:00.000Z",
@@ -475,21 +475,21 @@ describe("summarizeTranscript", () => {
   });
 
   it("treats non-object JSONL rows as unreadable", () => {
-    expect(summarizeTranscript(JSON.stringify(["not", "a", "cursor", "row"]))).toEqual({
+    expect(summarizeCursorTranscript(JSON.stringify(["not", "a", "cursor", "row"]))).toEqual({
       kind: "unreadable",
     });
   });
 
   it("uses a discriminated state when no real user is present", () => {
     expect(
-      summarizeTranscript(JSON.stringify({ event: "assistant_message", text: "done" })),
+      summarizeCursorTranscript(JSON.stringify({ event: "assistant_message", text: "done" })),
     ).toEqual({
       kind: "no-user",
     });
   });
 
   it("uses a discriminated state when the transcript file cannot be read", () => {
-    expect(summarizeTranscriptFile("/tmp/mainframe-missing-transcript.jsonl")).toEqual({
+    expect(summarizeCursorTranscriptFile("/tmp/mainframe-missing-transcript.jsonl")).toEqual({
       kind: "unreadable",
     });
   });
@@ -499,7 +499,7 @@ describe("summarizeTranscript", () => {
     const path = join(directory, "oversized.jsonl");
     writeFileSync(path, "x".repeat(5 * 1024 * 1024 + 1));
 
-    expect(summarizeTranscriptFile(path)).toEqual({ kind: "unreadable" });
+    expect(summarizeCursorTranscriptFile(path)).toEqual({ kind: "unreadable" });
   });
 
   it("treats symlink transcript paths as unreadable", () => {
@@ -518,7 +518,7 @@ describe("summarizeTranscript", () => {
     );
     symlinkSync(sourcePath, symlinkPath);
 
-    expect(summarizeTranscriptFile(symlinkPath)).toEqual({ kind: "unreadable" });
+    expect(summarizeCursorTranscriptFile(symlinkPath)).toEqual({ kind: "unreadable" });
   });
 });
 
