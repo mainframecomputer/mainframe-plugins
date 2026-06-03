@@ -27,7 +27,9 @@ const PluginManifestSchema = z.object({
   skills: z.string().min(1),
 });
 
-const CodexManifestSchema = z.object({
+// Codex and Claude Code manifests share the same component layout: a hooks
+// file plus the shared MCP wiring and skill directory.
+const NestedHostManifestSchema = z.object({
   hooks: z.string().min(1),
   mcpServers: z.string().min(1),
   skills: z.string().min(1),
@@ -37,8 +39,11 @@ const packageJson = PackageSchema.parse(JSON.parse(readFileSync("package.json", 
 const pluginManifest = PluginManifestSchema.parse(
   JSON.parse(readFileSync(".cursor-plugin/plugin.json", "utf8")),
 );
-const codexManifest = CodexManifestSchema.parse(
+const codexManifest = NestedHostManifestSchema.parse(
   JSON.parse(readFileSync(".codex-plugin/plugin.json", "utf8")),
+);
+const claudeManifest = NestedHostManifestSchema.parse(
+  JSON.parse(readFileSync(".claude-plugin/plugin.json", "utf8")),
 );
 const archiveName = `${packageJson.name.replace(/^@/, "").replace("/", "-")}-${packageJson.version}.tgz`;
 const releaseDir = resolve("release");
@@ -59,6 +64,9 @@ const manifestPaths = [
   codexManifest.hooks,
   codexManifest.mcpServers,
   codexManifest.skills,
+  claudeManifest.hooks,
+  claudeManifest.mcpServers,
+  claudeManifest.skills,
 ].map((path) => path.replace(/^\.\//, ""));
 
 assertPluginPackageSurface(packageJson.files);

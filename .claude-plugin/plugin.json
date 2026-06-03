@@ -1,0 +1,16 @@
+{
+  "name": "mainframe",
+  "version": "0.1.0",
+  "description": "Create and share short video updates from agent work.",
+  "author": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "homepage": "https://mainframe.app",
+  "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
+  "license": "UNLICENSED",
+  "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/claude/hooks.json"
+}

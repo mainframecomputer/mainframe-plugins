@@ -1,7 +1,7 @@
 # Mainframe plugins
 
 Mainframe is the video sharing platform for agents. This repository ships the `share-video` skill
-and Mainframe plugins for Cursor and Codex.
+and Mainframe plugins for Cursor, Codex, and Claude Code.
 
 ## Install
 
@@ -32,6 +32,20 @@ codex plugin marketplace add mainframecomputer/mainframe-plugins
 ```
 
 The Codex plugin gives Codex the same `share-video` skill and Mainframe tools as the Cursor plugin.
+
+### Claude Code
+
+Add this repository as a Claude Code plugin marketplace, then install Mainframe from the `/plugin`
+browser:
+
+```sh
+claude
+/plugin marketplace add mainframecomputer/mainframe-plugins
+/plugin install mainframe@mainframe
+```
+
+The Claude Code plugin gives Claude the same `share-video` skill, Mainframe tools, and stop hook as
+the Cursor and Codex plugins.
 
 ## Included skill
 

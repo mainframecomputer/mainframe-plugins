@@ -27,7 +27,7 @@ const CursorHooksSchema = z
   })
   .passthrough();
 
-const CodexHooksSchema = z
+const NestedStopHooksSchema = z
   .object({
     hooks: z.object({
       Stop: z.tuple([
@@ -77,7 +77,7 @@ describe("package runtime surface", () => {
 
   it("ships the executable Codex hook runtime referenced by hooks.json and package bin", () => {
     const packageJson = PackageSchema.parse(readJson("package.json"));
-    const hooks = CodexHooksSchema.parse(readJson("hooks/codex/hooks.json"));
+    const hooks = NestedStopHooksSchema.parse(readJson("hooks/codex/hooks.json"));
 
     const hookTarget = readPluginRootNodeTarget(
       hooks.hooks.Stop[0].hooks[0].command,
@@ -86,6 +86,22 @@ describe("package runtime surface", () => {
     const binTargets = Object.values(packageJson.bin).map((target) => target.replace(/^\.\//, ""));
 
     expect(hookTarget).toBe("dist/hooks/codex/stop.js");
+    expect(binTargets).toContain(hookTarget);
+    expect(isPackaged(hookTarget, packageJson.files)).toBe(true);
+    expect(statSync(hookTarget).mode & 0o111).not.toBe(0);
+  });
+
+  it("ships the executable Claude hook runtime referenced by hooks.json and package bin", () => {
+    const packageJson = PackageSchema.parse(readJson("package.json"));
+    const hooks = NestedStopHooksSchema.parse(readJson("hooks/claude/hooks.json"));
+
+    const hookTarget = readPluginRootNodeTarget(
+      hooks.hooks.Stop[0].hooks[0].command,
+      "CLAUDE_PLUGIN_ROOT",
+    );
+    const binTargets = Object.values(packageJson.bin).map((target) => target.replace(/^\.\//, ""));
+
+    expect(hookTarget).toBe("dist/hooks/claude/stop.js");
     expect(binTargets).toContain(hookTarget);
     expect(isPackaged(hookTarget, packageJson.files)).toBe(true);
     expect(statSync(hookTarget).mode & 0o111).not.toBe(0);
@@ -104,8 +120,10 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+// Hosts reference the bundled runtime through their plugin-root env var, which
+// may be written bare (`$PLUGIN_ROOT`) or braced (`${CLAUDE_PLUGIN_ROOT}`).
 function readPluginRootNodeTarget(command: string, rootEnv: string): string {
-  const match = new RegExp(`^node "\\$${rootEnv}/(.+)"$`).exec(command);
+  const match = new RegExp(`^node "\\$\\{?${rootEnv}\\}?/(.+)"$`).exec(command);
   if (match === null) {
     throw new Error(`Unexpected hook command: ${command}`);
   }

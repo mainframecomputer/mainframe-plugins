@@ -1,0 +1,14 @@
+{
+  "name": "mainframe",
+  "owner": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "plugins": [
+    {
+      "name": "mainframe",
+      "source": "./",
+      "description": "Create and share short video updates from agent work."
+    }
+  ]
+}
