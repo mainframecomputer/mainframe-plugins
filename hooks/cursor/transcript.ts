@@ -7,7 +7,7 @@ import {
   summarizeTranscriptFile,
   type TranscriptSummary,
 } from "../core/transcript.js";
-import { isJsonRecord, type JsonRecord } from "../core/json.js";
+import { type JsonRecord, parseJsonlRecords } from "../core/json.js";
 
 type CursorTranscriptRow =
   | { event: "assistant_message" }
@@ -24,56 +24,47 @@ export function summarizeCursorTranscript(text: string): TranscriptSummary {
 }
 
 function parseCursorRows(text: string): ParsedTranscript | "unreadable" {
+  const records = parseJsonlRecords(text);
+  if (records === "unreadable") {
+    return "unreadable";
+  }
+
   let sawUser = false;
   let lastUserTimeMs: number | null = null;
   let workHappened = false;
   let alreadyShared = false;
   let previousUserTimeMs: number | null = null;
 
-  for (const line of text.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (trimmed === "") {
+  for (const record of records) {
+    const row = parseCursorTranscriptRow(record);
+    if (row === null) {
+      return "unreadable";
+    }
+
+    if (row.event === "user_message") {
+      const userTimeMs = parseTimestampMs(row.timestamp);
+      if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
+        return "unreadable";
+      }
+
+      sawUser = true;
+      lastUserTimeMs = userTimeMs;
+      if (userTimeMs !== null) {
+        previousUserTimeMs = userTimeMs;
+      }
+      workHappened = false;
+      alreadyShared = false;
       continue;
     }
 
-    try {
-      const parsed: unknown = JSON.parse(trimmed);
-      if (!isJsonRecord(parsed)) {
+    if (sawUser) {
+      const workTimeMs = readToolWorkTimeMs(row, lastUserTimeMs);
+      if (workTimeMs === "unreadable") {
         return "unreadable";
       }
 
-      const row = parseCursorTranscriptRow(parsed);
-      if (row === null) {
-        return "unreadable";
-      }
-
-      if (row.event === "user_message") {
-        const userTimeMs = parseTimestampMs(row.timestamp);
-        if (previousUserTimeMs !== null && userTimeMs !== null && userTimeMs < previousUserTimeMs) {
-          return "unreadable";
-        }
-
-        sawUser = true;
-        lastUserTimeMs = userTimeMs;
-        if (userTimeMs !== null) {
-          previousUserTimeMs = userTimeMs;
-        }
-        workHappened = false;
-        alreadyShared = false;
-        continue;
-      }
-
-      if (sawUser) {
-        const workTimeMs = readToolWorkTimeMs(row, lastUserTimeMs);
-        if (workTimeMs === "unreadable") {
-          return "unreadable";
-        }
-
-        workHappened = workHappened || workTimeMs !== null;
-        alreadyShared = alreadyShared || hasMainframeVideoUrl(parsed);
-      }
-    } catch {
-      return "unreadable";
+      workHappened = workHappened || workTimeMs !== null;
+      alreadyShared = alreadyShared || hasMainframeVideoUrl(record);
     }
   }
 

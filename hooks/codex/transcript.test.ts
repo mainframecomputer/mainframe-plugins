@@ -27,6 +27,24 @@ describe("summarizeCodexTranscript", () => {
     });
   });
 
+  it("resets work state on each user turn", () => {
+    const summary = summarizeCodexTranscript(
+      codexRollout([
+        sessionMeta,
+        userMessage("2026-05-08T13:00:00.000Z", "first request"),
+        functionCall("2026-05-08T13:05:00.000Z"),
+        userMessage("2026-05-08T14:00:00.000Z", "second request"),
+      ]),
+    );
+
+    expect(summary).toEqual({
+      kind: "ready",
+      lastUserTimeMs: Date.parse("2026-05-08T14:00:00.000Z"),
+      workHappened: false,
+      alreadyShared: false,
+    });
+  });
+
   it("ignores unrelated rollout event types", () => {
     const summary = summarizeCodexTranscript(
       codexRollout([

@@ -29,6 +29,7 @@ export const SHIPPED_FILES = [
   "dist/hooks/codex/transcript.js",
   "dist/hooks/core/afk-gate.js",
   "dist/hooks/core/json.js",
+  "dist/hooks/core/run-stop-hook.js",
   "dist/hooks/core/stop-policy.js",
   "dist/hooks/core/transcript.js",
   "dist/hooks/cursor/stop-evaluator.js",

@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { decideStop } from "../core/stop-policy.js";
 import { parseJsonRecord } from "../core/json.js";
 import { summarizeCursorTranscriptFile } from "./transcript.js";
@@ -13,11 +12,6 @@ export function evaluateCursorStopHook(input) {
         return {};
     }
     return { followup_message: decision.message };
-}
-export function runCursorStopHookCli() {
-    const stdin = readFileSync(0, "utf8");
-    const output = evaluateCursorStopHook({ stdin });
-    process.stdout.write(`${JSON.stringify(output)}\n`);
 }
 function parseCursorStopInput(stdin) {
     const input = parseJsonRecord(stdin);

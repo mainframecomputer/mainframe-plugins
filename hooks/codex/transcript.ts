@@ -7,7 +7,7 @@ import {
   summarizeTranscriptFile,
   type TranscriptSummary,
 } from "../core/transcript.js";
-import { isJsonRecord, type JsonRecord } from "../core/json.js";
+import { isJsonRecord, type JsonRecord, parseJsonlRecords } from "../core/json.js";
 
 type CodexRowKind = "session-meta" | "user" | "work" | "other";
 
@@ -25,29 +25,19 @@ export function summarizeCodexTranscript(text: string): TranscriptSummary {
 // corruption (non-JSON or non-object rows) and the absence of a `session_meta`
 // row fail closed so the hook never fires on an untrusted transcript.
 function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
+  const records = parseJsonlRecords(text);
+  if (records === "unreadable") {
+    return "unreadable";
+  }
+
   let sawSessionMeta = false;
   let sawUser = false;
   let lastUserTimeMs: number | null = null;
   let workHappened = false;
   let alreadyShared = false;
 
-  for (const line of text.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (trimmed === "") {
-      continue;
-    }
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(trimmed);
-    } catch {
-      return "unreadable";
-    }
-    if (!isJsonRecord(parsed)) {
-      return "unreadable";
-    }
-
-    const kind = classifyCodexRow(parsed);
+  for (const record of records) {
+    const kind = classifyCodexRow(record);
     if (kind === "session-meta") {
       sawSessionMeta = true;
       continue;
@@ -55,7 +45,7 @@ function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
 
     if (kind === "user") {
       sawUser = true;
-      lastUserTimeMs = parseTimestampMs(parsed.timestamp);
+      lastUserTimeMs = parseTimestampMs(record.timestamp);
       workHappened = false;
       alreadyShared = false;
       continue;
@@ -63,7 +53,7 @@ function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
 
     if (sawUser) {
       workHappened = workHappened || kind === "work";
-      alreadyShared = alreadyShared || hasMainframeVideoUrl(parsed);
+      alreadyShared = alreadyShared || hasMainframeVideoUrl(record);
     }
   }
 

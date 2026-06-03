@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { decideStop } from "../core/stop-policy.js";
 import { parseJsonRecord } from "../core/json.js";
 import { summarizeCodexTranscriptFile } from "./transcript.js";
@@ -27,12 +25,6 @@ export function evaluateCodexStopHook(input: CodexStopEvaluationInput): CodexSto
   }
 
   return { decision: "block", reason: decision.message };
-}
-
-export function runCodexStopHookCli(): void {
-  const stdin = readFileSync(0, "utf8");
-  const output = evaluateCodexStopHook({ stdin });
-  process.stdout.write(`${JSON.stringify(output)}\n`);
 }
 
 function parseCodexStopInput(

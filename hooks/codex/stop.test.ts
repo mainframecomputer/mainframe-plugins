@@ -65,6 +65,38 @@ describe("Codex stop hook", () => {
     }
   });
 
+  it("does not fire when no work happened since the last user message", () => {
+    const directory = mkdtempSync(join(tmpdir(), "mainframe-codex-stop-test-"));
+    const path = join(directory, "rollout.jsonl");
+    writeFileSync(
+      path,
+      [
+        JSON.stringify({
+          timestamp: "2026-05-08T12:55:00.000Z",
+          type: "session_meta",
+          payload: { id: "session-1", cwd: "/workspace" },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:00:00.000Z",
+          type: "event_msg",
+          payload: { type: "user_message", message: "please work on this", kind: "plain" },
+        }),
+        JSON.stringify({
+          timestamp: "2026-05-08T13:30:00.000Z",
+          type: "event_msg",
+          payload: { type: "agent_message", message: "Here is my answer." },
+        }),
+      ].join("\n"),
+    );
+
+    expect(
+      evaluateCodexStopHook({
+        stdin: stopInput({ transcript_path: path }),
+        nowMs: stopTimeMs,
+      }),
+    ).toEqual({});
+  });
+
   it("does not fire after a Mainframe video URL appears in tool output", () => {
     const directory = mkdtempSync(join(tmpdir(), "mainframe-codex-stop-test-"));
     const path = join(directory, "rollout.jsonl");

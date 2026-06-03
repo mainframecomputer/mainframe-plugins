@@ -1,3 +1,4 @@
 #!/usr/bin/env node
-import { runCodexStopHookCli } from "./stop-evaluator.js";
-runCodexStopHookCli();
+import { runStopHookCli } from "../core/run-stop-hook.js";
+import { evaluateCodexStopHook } from "./stop-evaluator.js";
+runStopHookCli(evaluateCodexStopHook);
