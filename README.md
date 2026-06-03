@@ -18,11 +18,7 @@ npx skills add mainframecomputer/mainframe-plugins --list
 ```
 
 If you use Cursor, you can install the Mainframe plugin from the Cursor marketplace instead. The
-plugin includes the `share-video` skill, hosted Mainframe MCP tools, and a conservative `stop` hook
-that can remind an agent to leave a video handoff.
-
-The hook only suggests a video after a real user request, agent tool work, and about an hour of
-user inactivity. It does not include transcript content in the suggestion.
+plugin includes the `share-video` skill and Mainframe tools.
 
 ## Included skill
 
@@ -30,17 +26,3 @@ user inactivity. It does not include transcript content in the suggestion.
   walkthroughs, PR recaps, handoffs, and visual bug reports.
 
 The skill lives at `skills/share-video/SKILL.md`.
-
-## Development
-
-Most changes touch `tooling/generate.ts`, `skills/share-video/SKILL.md`, or
-`hooks/core/afk-gate.ts`.
-
-```sh
-bun install
-bun run generate
-bun run verify
-bun run pack:release
-```
-
-This repository is proprietary to Mainframe Computer, Inc. See `LICENSE`.
