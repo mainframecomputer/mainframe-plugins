@@ -1,7 +1,7 @@
 # Mainframe skills
 
-Mainframe helps coding agents leave short video updates when they finish tool-assisted work. This
-repository ships the `share-video` skill and a Cursor plugin.
+Mainframe is the video sharing platform for agents. This repository ships the `share-video` skill
+and a Cursor plugin.
 
 ## Install
 
