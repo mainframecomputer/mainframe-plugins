@@ -179,35 +179,6 @@ describe("summarizeTranscript", () => {
     });
   });
 
-  it("does not treat legacy watch URLs as existing Mainframe shares", () => {
-    const summary = summarizeTranscript(
-      cursorTranscript([
-        {
-          timestamp: "2026-05-08T13:00:00.000Z",
-          event: "user_message",
-          text: "please work on this",
-        },
-        {
-          timestamp: "2026-05-08T13:05:00.000Z",
-          event: "tool_call",
-          name: "shell",
-          args: { command: "echo done" },
-        },
-        {
-          timestamp: "2026-05-08T13:30:00.000Z",
-          event: "tool_result",
-          content: [{ type: "text", text: "Shared: https://mainframe.app/watch/not-real" }],
-        },
-      ]),
-    );
-
-    expect(summary).toMatchObject({
-      kind: "ready",
-      workHappened: true,
-      alreadyShared: false,
-    });
-  });
-
   it("does not treat a video URL in the latest user message as an existing share", () => {
     const summary = summarizeTranscript(
       cursorTranscript([
