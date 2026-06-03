@@ -182,6 +182,34 @@ describe("summarizeCodexTranscript", () => {
     expect(summary).toEqual({ kind: "no-user" });
   });
 
+  it("keeps the real user turn when a synthetic user row is injected after work", () => {
+    const summary = summarizeCodexTranscript(
+      codexRollout([
+        sessionMeta,
+        userMessage("2026-05-08T13:00:00.000Z", "please work on this"),
+        functionCall("2026-05-08T13:05:00.000Z"),
+        {
+          timestamp: "2026-05-08T13:10:00.000Z",
+          type: "response_item",
+          payload: {
+            type: "message",
+            role: "user",
+            content: [
+              { type: "input_text", text: "<environment_context>cwd</environment_context>" },
+            ],
+          },
+        },
+      ]),
+    );
+
+    expect(summary).toEqual({
+      kind: "ready",
+      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
+      workHappened: true,
+      alreadyShared: false,
+    });
+  });
+
   it("reports missing user time when the latest user timestamp is malformed", () => {
     const summary = summarizeCodexTranscript(
       codexRollout([
@@ -192,6 +220,16 @@ describe("summarizeCodexTranscript", () => {
     );
 
     expect(summary).toEqual({ kind: "missing-user-time" });
+  });
+
+  it("fails closed when the latest user timestamp is outside the supported epoch range", () => {
+    for (const timestamp of ["1999-12-31T23:59:59.000Z", "2101-01-01T00:00:00.000Z"]) {
+      expect(
+        summarizeCodexTranscript(
+          codexRollout([sessionMeta, userMessage(timestamp, "please work on this")]),
+        ),
+      ).toEqual({ kind: "missing-user-time" });
+    }
   });
 
   it("treats a transcript without a session_meta row as unreadable", () => {
