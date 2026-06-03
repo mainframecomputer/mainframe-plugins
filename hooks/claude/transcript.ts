@@ -1,15 +1,13 @@
 import { isJsonRecord, type JsonRecord, parseJsonlRecords } from "../core/json.js";
 import {
-  hasMainframeVideoUrl,
+  accumulateClassifiedRows,
+  type ClassifiedRowKind,
   isNonEmptyString,
-  nextUserTimeMs,
   type ParsedTranscript,
   summarizeTranscript,
   summarizeTranscriptFile,
   type TranscriptSummary,
 } from "../core/transcript.js";
-
-type ClaudeRowKind = "user" | "work" | "claude-other" | "foreign";
 
 export function summarizeClaudeTranscriptFile(path: string): TranscriptSummary {
   return summarizeTranscriptFile(path, parseClaudeRows);
@@ -32,63 +30,34 @@ function parseClaudeRows(text: string): ParsedTranscript | "unreadable" {
     return "unreadable";
   }
 
-  let sawClaudeEntry = false;
-  let sawUser = false;
-  let lastUserTimeMs: number | null = null;
-  let workHappened = false;
-  let alreadyShared = false;
-  let previousUserTimeMs: number | null = null;
-
-  for (const record of records) {
-    const kind = classifyClaudeRow(record);
-    if (kind !== "foreign") {
-      sawClaudeEntry = true;
-    }
-
-    if (kind === "user") {
-      const userTimeMs = nextUserTimeMs(record.timestamp, previousUserTimeMs);
-      if (userTimeMs === "unreadable") {
-        return "unreadable";
-      }
-
-      sawUser = true;
-      lastUserTimeMs = userTimeMs;
-      if (userTimeMs !== null) {
-        previousUserTimeMs = userTimeMs;
-      }
-      workHappened = false;
-      alreadyShared = false;
-      continue;
-    }
-
-    if (sawUser) {
-      workHappened = workHappened || kind === "work";
-      alreadyShared = alreadyShared || hasMainframeVideoUrl(record);
-    }
-  }
-
-  if (!sawClaudeEntry) {
+  if (!records.some(isClaudeMessageEntry)) {
     return "unreadable";
   }
 
-  return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
+  return accumulateClassifiedRows(records, classifyClaudeRow);
 }
 
-function classifyClaudeRow(record: JsonRecord): ClaudeRowKind {
+// A Claude transcript always carries user/assistant message entries; their
+// absence means this is a foreign or empty format, so fail closed.
+function isClaudeMessageEntry(record: JsonRecord): boolean {
+  return (record.type === "user" || record.type === "assistant") && isJsonRecord(record.message);
+}
+
+function classifyClaudeRow(record: JsonRecord): ClassifiedRowKind {
   if (record.type !== "user" && record.type !== "assistant") {
-    return "foreign";
+    return "ignore";
   }
 
   const message = record.message;
   if (!isJsonRecord(message)) {
-    return "foreign";
+    return "ignore";
   }
 
   if (record.type === "assistant") {
-    return hasToolUseBlock(message.content) ? "work" : "claude-other";
+    return hasToolUseBlock(message.content) ? "work" : "ignore";
   }
 
-  return isRealUserMessage(message) ? "user" : "claude-other";
+  return isRealUserMessage(message) ? "user" : "ignore";
 }
 
 // A real user turn carries human text: either a plain string or content blocks

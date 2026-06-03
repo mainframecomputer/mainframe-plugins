@@ -1,6 +1,6 @@
 import { lstatSync, readFileSync } from "node:fs";
 
-import { isJsonRecord } from "./json.js";
+import { isJsonRecord, type JsonRecord } from "./json.js";
 
 const MAX_TRANSCRIPT_BYTES = 5 * 1024 * 1024;
 const MIN_EPOCH_SECONDS = 946_684_800;
@@ -69,6 +69,54 @@ export function summarizeTranscript(
     workHappened: parsed.workHappened,
     alreadyShared: parsed.alreadyShared,
   };
+}
+
+// Each transcript row reduces to one of three kinds for accumulation: a real
+// user turn, agent work, or anything else to ignore. Hosts decide which rows
+// are which; the shared loop below decides what to do with them.
+export type ClassifiedRowKind = "user" | "work" | "ignore";
+
+// The host-agnostic accumulation pass. Hosts classify rows; this owns the
+// append-only invariants every host shares: each user turn advances the
+// non-decreasing time cursor (a regression fails closed as "unreadable") and
+// resets the per-turn work/share flags, and only post-user rows count toward
+// work or an existing share. Keeping this in one place stops the fail-closed
+// ordering rule from drifting between hosts.
+export function accumulateClassifiedRows(
+  records: readonly JsonRecord[],
+  classify: (record: JsonRecord) => ClassifiedRowKind,
+): ParsedTranscript | "unreadable" {
+  let sawUser = false;
+  let lastUserTimeMs: number | null = null;
+  let workHappened = false;
+  let alreadyShared = false;
+  let previousUserTimeMs: number | null = null;
+
+  for (const record of records) {
+    const kind = classify(record);
+    if (kind === "user") {
+      const userTimeMs = nextUserTimeMs(record.timestamp, previousUserTimeMs);
+      if (userTimeMs === "unreadable") {
+        return "unreadable";
+      }
+
+      sawUser = true;
+      lastUserTimeMs = userTimeMs;
+      if (userTimeMs !== null) {
+        previousUserTimeMs = userTimeMs;
+      }
+      workHappened = false;
+      alreadyShared = false;
+      continue;
+    }
+
+    if (sawUser) {
+      workHappened = workHappened || kind === "work";
+      alreadyShared = alreadyShared || hasMainframeVideoUrl(record);
+    }
+  }
+
+  return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
 }
 
 function readTranscriptText(path: string): string | null {
