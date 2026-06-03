@@ -37,7 +37,7 @@ const metadata = MetadataSchema.parse({
   version: "0.1.0",
   description: "Create and share short video updates from agent work.",
   longDescription:
-    "Agents now produce more work than anyone can review, so keeping up has become the bottleneck. When your agent finishes a task, it sends you a short video of what it did, recorded in your own voice and company branding and shareable with your team.",
+    "Have your agents record short videos of what they did so you can stay up to date on their work at a glance. Each recap uses your own voice and company branding, and is shareable with your team.",
   category: "Productivity",
   author: {
     name: "Mainframe",
