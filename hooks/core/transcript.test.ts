@@ -275,6 +275,49 @@ describe("summarizeTranscript", () => {
     ).toEqual({ kind: "unreadable" });
   });
 
+  it("preserves valid user timestamp order across malformed user timestamps", () => {
+    expect(
+      summarizeTranscript(
+        cursorTranscript([
+          {
+            timestamp: "2026-05-08T15:00:00.000Z",
+            event: "user_message",
+            text: "first request",
+          },
+          {
+            timestamp: "not-a-timestamp",
+            event: "user_message",
+            text: "malformed timestamp request",
+          },
+          {
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "older request emitted later",
+          },
+        ]),
+      ),
+    ).toEqual({ kind: "unreadable" });
+  });
+
+  it("reports missing user time when the latest user timestamp is malformed", () => {
+    expect(
+      summarizeTranscript(
+        cursorTranscript([
+          {
+            timestamp: "2026-05-08T13:00:00.000Z",
+            event: "user_message",
+            text: "first request",
+          },
+          {
+            timestamp: "not-a-timestamp",
+            event: "user_message",
+            text: "latest request",
+          },
+        ]),
+      ),
+    ).toEqual({ kind: "missing-user-time" });
+  });
+
   it("treats post-user tool calls without timestamps as unreadable", () => {
     expect(
       summarizeTranscript(

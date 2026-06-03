@@ -131,7 +131,9 @@ function summarizeCursorRows(text: string):
 
         sawUser = true;
         lastUserTimeMs = userTimeMs;
-        previousUserTimeMs = userTimeMs;
+        if (userTimeMs !== null) {
+          previousUserTimeMs = userTimeMs;
+        }
         workHappened = false;
         alreadyShared = false;
         continue;
