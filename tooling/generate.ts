@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import { z } from "zod";
+import { PACKAGE_FILES } from "./package-surface.js";
 
 const JsonRecordSchema = z.record(z.string(), z.unknown());
 
@@ -98,16 +99,7 @@ function updatePackageJson(): void {
   packageJson.bin = {
     "mainframe-hook-cursor": "./dist/hooks/cursor/stop.js",
   };
-  packageJson.files = [
-    ".cursor-plugin",
-    ".mcp.json",
-    "LICENSE",
-    "README.md",
-    "assets/logo.png",
-    "dist",
-    "hooks/cursor/hooks.json",
-    "skills",
-  ];
+  packageJson.files = PACKAGE_FILES;
 
   writeJson("package.json", packageJson);
 }
