@@ -121,9 +121,10 @@ function readJson(path: string): unknown {
 }
 
 // Hosts reference the bundled runtime through their plugin-root env var, which
-// may be written bare (`$PLUGIN_ROOT`) or braced (`${CLAUDE_PLUGIN_ROOT}`).
+// may be written bare (`$PLUGIN_ROOT`) or braced (`${CLAUDE_PLUGIN_ROOT}`); the
+// brace must be matched (no `${FOO` or `$FOO}`).
 function readPluginRootNodeTarget(command: string, rootEnv: string): string {
-  const match = new RegExp(`^node "\\$\\{?${rootEnv}\\}?/(.+)"$`).exec(command);
+  const match = new RegExp(`^node "\\$(?:\\{${rootEnv}\\}|${rootEnv})/(.+)"$`).exec(command);
   if (match === null) {
     throw new Error(`Unexpected hook command: ${command}`);
   }
