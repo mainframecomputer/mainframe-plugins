@@ -12,9 +12,7 @@ const AuthorSchema = z
 
 const RepositorySchema = z.literal("https://github.com/mainframecomputer/mainframe-plugins.git");
 
-const DescriptionSchema = z.literal(
-  "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
-);
+const DescriptionSchema = z.literal("Create and share short video updates from agent work.");
 
 const LongDescriptionSchema = z.literal(
   "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",

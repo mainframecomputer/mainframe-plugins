@@ -36,8 +36,7 @@ const metadata = MetadataSchema.parse({
   displayName: "Mainframe",
   packageName: "@mainframe/plugins",
   version: "0.1.0",
-  description:
-    "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
+  description: "Create and share short video updates from agent work.",
   longDescription:
     "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
   category: "Productivity",
