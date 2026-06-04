@@ -10,6 +10,7 @@
   "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
   "license": "UNLICENSED",
   "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
+  "displayName": "Mainframe",
   "logo": "assets/logo.png",
   "skills": "./skills",
   "mcpServers": "./.mcp.json",

@@ -7,6 +7,7 @@
   "plugins": [
     {
       "name": "mainframe",
+      "displayName": "Mainframe",
       "source": "./",
       "description": "Create and share short video updates from agent work."
     }
