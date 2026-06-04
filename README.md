@@ -44,8 +44,8 @@ claude
 /plugin install mainframe@mainframe
 ```
 
-The Claude Code plugin gives Claude the same `share-video` skill, Mainframe tools, and stop hook as
-the Cursor and Codex plugins.
+The Claude Code plugin gives Claude the same `share-video` skill and Mainframe tools as the Cursor
+and Codex plugins.
 
 ## Included skill
 
