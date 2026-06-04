@@ -1,7 +1,7 @@
 # Mainframe plugins
 
 Mainframe is the video sharing platform for agents. This repository ships the `share-video` skill
-and Mainframe plugins for Cursor, Codex, and Claude Code.
+and Mainframe plugins for Cursor, Codex, Claude Code, and OpenClaw.
 
 ## Install
 
@@ -47,27 +47,52 @@ claude
 The Claude Code plugin gives Claude the same `share-video` skill and Mainframe tools as the Cursor
 and Codex plugins.
 
-### ClawHub (OpenClaw)
+### OpenClaw
 
-[ClawHub](https://clawhub.ai) is the public skill registry for OpenClaw. It is a publishing target
-for the existing canonical `share-video` skill, not a new supported host: the same skill folder the
-Cursor, Codex, and Claude Code plugins ship is published there, so any OpenClaw agent can install it
-with the `clawhub` CLI:
+Install the Mainframe plugin from [ClawHub](https://clawhub.ai), the public skill and plugin
+registry for OpenClaw, with the OpenClaw plugin manager:
+
+```sh
+openclaw plugins install clawhub:mainframe
+```
+
+The plugin gives OpenClaw the `share-video` skill, the hosted Mainframe MCP server, and a native
+`before_agent_finalize` hook that suggests a short video after a long, unattended run — the same
+conservative AFK behavior as the other hosts' stop hooks, reusing the shared `hooks/core` runtime.
+Because native OpenClaw plugins cannot register an MCP server for you and conversation hooks need
+explicit access, add this to your `openclaw.json`:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "mainframe": { "type": "http", "url": "https://mcp.mainframe.app/mcp" }
+    }
+  },
+  "plugins": {
+    "entries": {
+      "mainframe": { "hooks": { "allowConversationAccess": true } }
+    }
+  }
+}
+```
+
+#### Publishing to ClawHub
+
+The canonical `share-video` skill is also published to ClawHub on its own, so any agent can install
+just the skill (its `generate_video`, `upload_video`, and `get_video` tools come from the hosted
+Mainframe MCP server, wired up separately):
 
 ```sh
 clawhub install share-video
 ```
 
-A ClawHub install delivers the skill instructions only. The `generate_video`, `upload_video`, and
-`get_video` tools come from the hosted Mainframe MCP server (`https://mcp.mainframe.app/mcp`, which
-authenticates on install), so OpenClaw users wire that server up separately for the skill's tools to
-work.
-
 Publishing is automated by [`.github/workflows/clawhub-publish.yml`](.github/workflows/clawhub-publish.yml),
-which reuses ClawHub's official `skill-publish` reusable workflow instead of duplicating publish
-logic. Pull requests run a dry-run preview, and a manual `workflow_dispatch` run performs the real
-publish. A real publish needs a `CLAWHUB_TOKEN` repository secret and an `owner` handle; publishing
-to ClawHub releases the skill under `MIT-0`.
+which reuses ClawHub's official `skill-publish` and `package-publish` reusable workflows instead of
+duplicating publish logic. Pull requests run dry-run previews, and a manual `workflow_dispatch` run
+publishes both the skill and the plugin package. A real publish needs a `CLAWHUB_TOKEN` repository
+secret and an `owner` handle (the package scope `@mainframe` must match that owner); publishing the
+skill to ClawHub releases it under `MIT-0`.
 
 ## Included skill
 

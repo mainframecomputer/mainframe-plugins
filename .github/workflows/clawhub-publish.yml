@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       owner:
-        description: ClawHub owner or publisher handle. Leave empty to publish as the authenticated user.
+        description: ClawHub owner or publisher handle for the skill and package. Leave empty to publish as the authenticated user.
         type: string
         required: false
         default: ""
@@ -13,7 +13,7 @@ on:
 permissions: {}
 
 jobs:
-  dry-run:
+  skill-dry-run:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
@@ -22,12 +22,33 @@ jobs:
     with:
       dry_run: true
 
-  publish:
+  package-dry-run:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      id-token: write
+    uses: openclaw/clawhub/.github/workflows/package-publish.yml@v0.19.0
+    with:
+      dry_run: true
+
+  skill-publish:
     if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       id-token: write
     uses: openclaw/clawhub/.github/workflows/skill-publish.yml@v0.19.0
+    with:
+      owner: ${{ inputs.owner }}
+      dry_run: false
+    secrets:
+      clawhub_token: ${{ secrets.CLAWHUB_TOKEN }}
+
+  package-publish:
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      id-token: write
+    uses: openclaw/clawhub/.github/workflows/package-publish.yml@v0.19.0
     with:
       owner: ${{ inputs.owner }}
       dry_run: false

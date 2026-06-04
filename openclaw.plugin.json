@@ -1,0 +1,29 @@
+{
+  "name": "mainframe",
+  "version": "0.1.0",
+  "description": "Create and share short video updates from agent work.",
+  "author": {
+    "name": "Mainframe",
+    "email": "support@mainframe.app"
+  },
+  "homepage": "https://mainframe.app",
+  "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
+  "license": "UNLICENSED",
+  "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
+  "displayName": "Mainframe",
+  "longDescription": "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
+  "category": "Productivity",
+  "logo": "assets/logo.png",
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "host": "openclaw",
+  "entrypoint": "./dist/hooks/openclaw/register.js",
+  "capabilities": ["skills", "mcp", "hooks"],
+  "callbacks": ["agent_turn_prepare", "after_tool_call", "before_agent_finalize"],
+  "compat": {
+    "pluginApi": ">=2026.6.1"
+  },
+  "build": {
+    "openclawVersion": "2026.6.1"
+  }
+}

@@ -8,6 +8,7 @@ const generatedPaths = [
   ".agents/plugins/marketplace.json",
   ".claude-plugin/plugin.json",
   ".claude-plugin/marketplace.json",
+  "openclaw.plugin.json",
   "package.json",
 ];
 

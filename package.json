@@ -27,6 +27,7 @@
     ".codex-plugin",
     ".cursor-plugin",
     ".mcp.json",
+    "openclaw.plugin.json",
     "LICENSE",
     "README.md",
     "assets/logo.png",
@@ -41,9 +42,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && bun tooling/mark-executable.ts",
     "build:check": "bun run build && git diff --exit-code -- dist",
-    "generate": "bun tooling/generate.ts && oxfmt --write package.json .cursor-plugin .codex-plugin .agents .claude-plugin",
+    "generate": "bun tooling/generate.ts && oxfmt --write package.json .cursor-plugin .codex-plugin .agents .claude-plugin openclaw.plugin.json",
     "check:generated": "bun tooling/generated-drift-check.ts",
-    "archive:release": "bun run generate && bun run build && git diff --exit-code -- package.json .cursor-plugin .codex-plugin .agents .claude-plugin dist && bun tooling/release-archive.ts",
+    "archive:release": "bun run generate && bun run build && git diff --exit-code -- package.json .cursor-plugin .codex-plugin .agents .claude-plugin openclaw.plugin.json dist && bun tooling/release-archive.ts",
     "pack:release": "bun run verify && bun run archive:release",
     "lint": "oxlint . --deny-warnings --report-unused-disable-directives",
     "lint:fix": "oxlint . --fix",
@@ -72,5 +73,16 @@
     ],
     "*.{json,jsonc,md,yaml,yml,css,html,svg}": "oxfmt --no-error-on-unmatched-pattern"
   },
-  "packageManager": "bun@1.3.1"
+  "packageManager": "bun@1.3.1",
+  "openclaw": {
+    "extensions": [
+      "./dist/hooks/openclaw/register.js"
+    ],
+    "compat": {
+      "pluginApi": ">=2026.6.1"
+    },
+    "build": {
+      "openclawVersion": "2026.6.1"
+    }
+  }
 }

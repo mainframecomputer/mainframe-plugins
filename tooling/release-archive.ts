@@ -35,6 +35,15 @@ const NestedHostManifestSchema = z.object({
   skills: z.string().min(1),
 });
 
+// OpenClaw runs an in-process plugin entry, so it ships a built entrypoint
+// alongside the shared MCP wiring, skill directory, and logo.
+const OpenClawManifestSchema = z.object({
+  entrypoint: z.string().min(1),
+  logo: z.string().min(1),
+  mcpServers: z.string().min(1),
+  skills: z.string().min(1),
+});
+
 const packageJson = PackageSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
 const pluginManifest = PluginManifestSchema.parse(
   JSON.parse(readFileSync(".cursor-plugin/plugin.json", "utf8")),
@@ -44,6 +53,9 @@ const codexManifest = NestedHostManifestSchema.parse(
 );
 const claudeManifest = NestedHostManifestSchema.parse(
   JSON.parse(readFileSync(".claude-plugin/plugin.json", "utf8")),
+);
+const openclawManifest = OpenClawManifestSchema.parse(
+  JSON.parse(readFileSync("openclaw.plugin.json", "utf8")),
 );
 const archiveName = `${packageJson.name.replace(/^@/, "").replace("/", "-")}-${packageJson.version}.tgz`;
 const releaseDir = resolve("release");
@@ -67,6 +79,10 @@ const manifestPaths = [
   claudeManifest.hooks,
   claudeManifest.mcpServers,
   claudeManifest.skills,
+  openclawManifest.entrypoint,
+  openclawManifest.logo,
+  openclawManifest.mcpServers,
+  openclawManifest.skills,
 ].map((path) => path.replace(/^\.\//, ""));
 
 assertPluginPackageSurface(packageJson.files);

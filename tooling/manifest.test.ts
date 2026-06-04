@@ -64,6 +64,23 @@ const ClaudeManifestSchema = SharedManifestSchema.extend({
   hooks: z.literal("./hooks/claude/hooks.json"),
 }).strict();
 
+const OpenClawManifestSchema = SharedManifestSchema.extend({
+  displayName: z.literal("Mainframe"),
+  longDescription: LongDescriptionSchema,
+  category: z.literal("Productivity"),
+  logo: z.literal("assets/logo.png"),
+  host: z.literal("openclaw"),
+  entrypoint: z.literal("./dist/hooks/openclaw/register.js"),
+  capabilities: z.tuple([z.literal("skills"), z.literal("mcp"), z.literal("hooks")]),
+  callbacks: z.tuple([
+    z.literal("agent_turn_prepare"),
+    z.literal("after_tool_call"),
+    z.literal("before_agent_finalize"),
+  ]),
+  compat: z.object({ pluginApi: z.literal(">=2026.6.1") }).strict(),
+  build: z.object({ openclawVersion: z.literal("2026.6.1") }).strict(),
+}).strict();
+
 describe("generated plugin manifests", () => {
   it(".cursor-plugin/plugin.json matches the Cursor plugin schema", () => {
     const manifest = CursorManifestSchema.parse(
@@ -87,6 +104,15 @@ describe("generated plugin manifests", () => {
     );
 
     expect(manifest.hooks).toBe("./hooks/claude/hooks.json");
+  });
+
+  it("openclaw.plugin.json matches the OpenClaw plugin schema", () => {
+    const manifest = OpenClawManifestSchema.parse(
+      JSON.parse(readFileSync("openclaw.plugin.json", "utf8")),
+    );
+
+    expect(manifest.host).toBe("openclaw");
+    expect(manifest.callbacks).toContain("before_agent_finalize");
   });
 
   it("Cursor marketplace metadata matches the Cursor marketplace schema", () => {
