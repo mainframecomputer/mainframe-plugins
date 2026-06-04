@@ -29,6 +29,7 @@ const MetadataSchema = z.object({
 
 const CURSOR_HOOKS = "./hooks/cursor/hooks.json";
 const CODEX_HOOKS = "./hooks/codex/hooks.json";
+const CLAUDE_HOOKS = "./hooks/claude/hooks.json";
 
 const metadata = MetadataSchema.parse({
   name: "mainframe",
@@ -75,6 +76,9 @@ function main(): void {
 
   writeJson(".codex-plugin/plugin.json", codexManifest());
   writeJson(".agents/plugins/marketplace.json", codexMarketplace());
+
+  writeJson(".claude-plugin/plugin.json", claudeManifest());
+  writeJson(".claude-plugin/marketplace.json", claudeMarketplace());
 
   updatePackageJson();
 }
@@ -140,12 +144,39 @@ function codexMarketplace() {
   };
 }
 
+function claudeManifest() {
+  return {
+    ...sharedManifest,
+    skills: metadata.skillDirectory,
+    mcpServers: metadata.mcpServers,
+    hooks: CLAUDE_HOOKS,
+  };
+}
+
+// Claude Code loads the plugin in place from the repository root, where its
+// `.claude-plugin/marketplace.json` and `.claude-plugin/plugin.json` live side
+// by side. The relative `"./"` source points at that root so the Claude plugin
+// shares the same skill, MCP wiring, and hook runtime as the other hosts.
+function claudeMarketplace() {
+  return {
+    name: metadata.name,
+    owner: metadata.author,
+    plugins: [
+      {
+        name: metadata.name,
+        source: "./",
+        description: metadata.description,
+      },
+    ],
+  };
+}
+
 function updatePackageJson(): void {
   const packageJson = JsonRecordSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
   packageJson.name = metadata.packageName;
   packageJson.version = metadata.version;
   packageJson.description =
-    "Mainframe Cursor and Codex plugin manifests, skill, MCP wiring, and stop hooks.";
+    "Mainframe Cursor, Codex, and Claude Code plugin manifests, skill, MCP wiring, and stop hooks.";
   packageJson.private = true;
   packageJson.license = metadata.license;
   packageJson.homepage = metadata.homepage;
@@ -157,6 +188,7 @@ function updatePackageJson(): void {
   packageJson.bin = {
     "mainframe-hook-cursor": "./dist/hooks/cursor/stop.js",
     "mainframe-hook-codex": "./dist/hooks/codex/stop.js",
+    "mainframe-hook-claude": "./dist/hooks/claude/stop.js",
   };
   packageJson.files = PACKAGE_FILES;
 

@@ -6,6 +6,10 @@ export function summarizeCursorTranscriptFile(path) {
 export function summarizeCursorTranscript(text) {
     return summarizeTranscript(text, parseCursorRows);
 }
+// Unlike Codex and Claude, Cursor keeps a bespoke loop rather than core's
+// `accumulateClassifiedRows`: it also fails closed when a post-user tool_call
+// lacks a timestamp or predates the last user turn (see `readToolWorkTimeMs`),
+// a per-row, stateful check the shared classify-only pass cannot express.
 function parseCursorRows(text) {
     const records = parseJsonlRecords(text);
     if (records === "unreadable") {

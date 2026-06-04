@@ -32,6 +32,43 @@ export function summarizeTranscript(text, parseRows) {
         alreadyShared: parsed.alreadyShared,
     };
 }
+// The shared row-accumulation pass for hosts whose transcripts need nothing
+// beyond row classification (currently Codex and Claude Code). It owns the
+// append-only invariants those hosts share: each user turn advances the
+// non-decreasing time cursor (a regression fails closed as "unreadable") and
+// resets the per-turn work/share flags, and only post-user rows count toward
+// work or an existing share. Cursor keeps its own loop because it additionally
+// validates per-tool-call timestamps against the last user turn (see
+// hooks/cursor/transcript.ts), which this classify-only pass cannot express.
+export function accumulateClassifiedRows(records, classify) {
+    let sawUser = false;
+    let lastUserTimeMs = null;
+    let workHappened = false;
+    let alreadyShared = false;
+    let previousUserTimeMs = null;
+    for (const record of records) {
+        const kind = classify(record);
+        if (kind === "user") {
+            const userTimeMs = nextUserTimeMs(record.timestamp, previousUserTimeMs);
+            if (userTimeMs === "unreadable") {
+                return "unreadable";
+            }
+            sawUser = true;
+            lastUserTimeMs = userTimeMs;
+            if (userTimeMs !== null) {
+                previousUserTimeMs = userTimeMs;
+            }
+            workHappened = false;
+            alreadyShared = false;
+            continue;
+        }
+        if (sawUser) {
+            workHappened = workHappened || kind === "work";
+            alreadyShared = alreadyShared || hasMainframeVideoUrl(record);
+        }
+    }
+    return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
+}
 function readTranscriptText(path) {
     try {
         const stat = lstatSync(path);

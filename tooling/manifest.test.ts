@@ -58,6 +58,10 @@ const CodexManifestSchema = SharedManifestSchema.extend({
     .strict(),
 }).strict();
 
+const ClaudeManifestSchema = SharedManifestSchema.extend({
+  hooks: z.literal("./hooks/claude/hooks.json"),
+}).strict();
+
 describe("generated plugin manifests", () => {
   it(".cursor-plugin/plugin.json matches the Cursor plugin schema", () => {
     const manifest = CursorManifestSchema.parse(
@@ -73,6 +77,14 @@ describe("generated plugin manifests", () => {
     );
 
     expect(manifest.hooks).toBe("./hooks/codex/hooks.json");
+  });
+
+  it(".claude-plugin/plugin.json matches the Claude Code plugin schema", () => {
+    const manifest = ClaudeManifestSchema.parse(
+      JSON.parse(readFileSync(".claude-plugin/plugin.json", "utf8")),
+    );
+
+    expect(manifest.hooks).toBe("./hooks/claude/hooks.json");
   });
 
   it("Cursor marketplace metadata matches the Cursor marketplace schema", () => {
@@ -133,5 +145,25 @@ describe("generated plugin manifests", () => {
       .strict();
 
     marketplaceSchema.parse(JSON.parse(readFileSync(".agents/plugins/marketplace.json", "utf8")));
+  });
+
+  it("Claude marketplace metadata matches the Claude marketplace schema", () => {
+    const marketplaceSchema = z
+      .object({
+        name: z.literal("mainframe"),
+        owner: AuthorSchema,
+        plugins: z.tuple([
+          z
+            .object({
+              name: z.literal("mainframe"),
+              source: z.literal("./"),
+              description: DescriptionSchema,
+            })
+            .strict(),
+        ]),
+      })
+      .strict();
+
+    marketplaceSchema.parse(JSON.parse(readFileSync(".claude-plugin/marketplace.json", "utf8")));
   });
 });

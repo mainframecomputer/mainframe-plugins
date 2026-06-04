@@ -1,22 +1,25 @@
 # Agent notes
 
-This repository packages the Mainframe Cursor and Codex plugins. Keep it focused on the
-Cursor and Codex manifests, hosted MCP wiring, the `share-video` skill, and the stop hooks.
+This repository packages the Mainframe Cursor, Codex, and Claude Code plugins. Keep it focused on
+the Cursor, Codex, and Claude Code manifests, hosted MCP wiring, the `share-video` skill, and the
+stop hooks.
 
 ## Repository boundaries
 
 - User-visible copy should say "Mainframe", not legacy product names.
 - Do not add secrets, customer data, private URLs, or private business context.
-- Cursor and Codex are the supported hosts. Both plugins share the repo root, the
-  `share-video` skill, the `./.mcp.json` wiring, and the `hooks/core` runtime. Do not add
-  other host surfaces unless the product task explicitly asks for them.
+- Cursor, Codex, and Claude Code are the supported hosts. All three plugins share the repo root,
+  the `share-video` skill, the `./.mcp.json` wiring, and the `hooks/core` runtime. Codex and Claude
+  Code share the same Stop hook contract, so they both use `hooks/core/stop-hook.ts`; only the
+  transcript parser differs per host. Do not add other host surfaces unless the product task
+  explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
-- Generated Cursor and Codex manifest and marketplace files come from `tooling/generate.ts`;
-  edit the config there, then run `bun run generate`.
+- Generated Cursor, Codex, and Claude Code manifest and marketplace files come from
+  `tooling/generate.ts`; edit the config there, then run `bun run generate`.
 - The canonical skill is `skills/share-video/SKILL.md`.
-- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, and `.agents/plugins/`. Do
-  not add package-local docs or extra top-level markdown unless the user asks; improve
-  `README.md` or this file instead.
+- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and
+  `.claude-plugin/`. Do not add package-local docs or extra top-level markdown unless the user
+  asks; improve `README.md` or this file instead.
 
 ## Start here
 

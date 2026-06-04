@@ -1,15 +1,13 @@
 import {
-  hasMainframeVideoUrl,
+  accumulateClassifiedRows,
+  type ClassifiedRowKind,
   isNonEmptyString,
-  nextUserTimeMs,
   type ParsedTranscript,
   summarizeTranscript,
   summarizeTranscriptFile,
   type TranscriptSummary,
 } from "../core/transcript.js";
 import { isJsonRecord, type JsonRecord, parseJsonlRecords } from "../core/json.js";
-
-type CodexRowKind = "session-meta" | "user" | "work" | "other";
 
 export function summarizeCodexTranscriptFile(path: string): TranscriptSummary {
   return summarizeTranscriptFile(path, parseCodexRows);
@@ -31,57 +29,19 @@ function parseCodexRows(text: string): ParsedTranscript | "unreadable" {
     return "unreadable";
   }
 
-  let sawSessionMeta = false;
-  let sawUser = false;
-  let lastUserTimeMs: number | null = null;
-  let workHappened = false;
-  let alreadyShared = false;
-  let previousUserTimeMs: number | null = null;
-
-  for (const record of records) {
-    const kind = classifyCodexRow(record);
-    if (kind === "session-meta") {
-      sawSessionMeta = true;
-      continue;
-    }
-
-    if (kind === "user") {
-      const userTimeMs = nextUserTimeMs(record.timestamp, previousUserTimeMs);
-      if (userTimeMs === "unreadable") {
-        return "unreadable";
-      }
-
-      sawUser = true;
-      lastUserTimeMs = userTimeMs;
-      if (userTimeMs !== null) {
-        previousUserTimeMs = userTimeMs;
-      }
-      workHappened = false;
-      alreadyShared = false;
-      continue;
-    }
-
-    if (sawUser) {
-      workHappened = workHappened || kind === "work";
-      alreadyShared = alreadyShared || hasMainframeVideoUrl(record);
-    }
-  }
-
-  if (!sawSessionMeta) {
+  // Every Codex rollout opens with a `session_meta` row; its absence means this
+  // isn't a Codex rollout, so fail closed.
+  if (!records.some((record) => record.type === "session_meta")) {
     return "unreadable";
   }
 
-  return { sawUser, lastUserTimeMs, workHappened, alreadyShared };
+  return accumulateClassifiedRows(records, classifyCodexRow);
 }
 
-function classifyCodexRow(record: JsonRecord): CodexRowKind {
-  if (record.type === "session_meta") {
-    return "session-meta";
-  }
-
+function classifyCodexRow(record: JsonRecord): ClassifiedRowKind {
   const payload = record.payload;
   if (!isJsonRecord(payload)) {
-    return "other";
+    return "ignore";
   }
 
   if (
@@ -96,7 +56,7 @@ function classifyCodexRow(record: JsonRecord): CodexRowKind {
     return "work";
   }
 
-  return "other";
+  return "ignore";
 }
 
 // Responses API tool invocations are persisted as `response_item` rows whose

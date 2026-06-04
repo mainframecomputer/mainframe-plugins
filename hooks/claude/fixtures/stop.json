@@ -1,0 +1,8 @@
+{
+  "session_id": "session-123",
+  "transcript_path": null,
+  "cwd": "/workspace/mainframe-plugins",
+  "hook_event_name": "Stop",
+  "stop_hook_active": false,
+  "permission_mode": "default"
+}

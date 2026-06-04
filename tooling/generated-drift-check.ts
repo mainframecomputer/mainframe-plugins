@@ -6,6 +6,8 @@ const generatedPaths = [
   ".cursor-plugin/marketplace.json",
   ".codex-plugin/plugin.json",
   ".agents/plugins/marketplace.json",
+  ".claude-plugin/plugin.json",
+  ".claude-plugin/marketplace.json",
   "package.json",
 ];
 
