@@ -56,11 +56,11 @@ registry for OpenClaw, with the OpenClaw plugin manager:
 openclaw plugins install clawhub:mainframe
 ```
 
-The plugin gives OpenClaw the `share-video` skill, the hosted Mainframe MCP server, and a native
-`before_agent_finalize` hook that suggests a short video after a long, unattended run — the same
-conservative AFK behavior as the other hosts' stop hooks, reusing the shared `hooks/core` runtime.
-Because native OpenClaw plugins cannot register an MCP server for you and conversation hooks need
-explicit access, add this to your `openclaw.json`:
+The plugin gives OpenClaw the `share-video` skill and a native `before_agent_finalize` hook that
+suggests a short video after a long, unattended run — the same conservative AFK behavior as the
+other hosts' stop hooks, reusing the shared `hooks/core` runtime. Native OpenClaw plugins cannot
+register an MCP server for you, and conversation hooks need explicit access, so add the hosted
+Mainframe MCP server and hook access to your `openclaw.json`:
 
 ```json
 {

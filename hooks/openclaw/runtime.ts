@@ -6,8 +6,12 @@ import { hasMainframeVideoUrl, type TranscriptSummary } from "../core/transcript
 // Cursor, Codex, and Claude Code hooks, this models the host contract locally
 // instead of depending on a host SDK.
 export type OpenClawFinalizeEvent = {
-  stopHookActive: boolean;
-  lastAssistantMessage?: string;
+  // Optional at this trust boundary so the guard can fail closed when the host
+  // omits or malforms it, rather than coercing a missing value to "not active".
+  stopHookActive?: boolean;
+  // The host contract allows structured assistant content; `hasMainframeVideoUrl`
+  // recurses over strings, arrays, and records, so keep this as `unknown`.
+  lastAssistantMessage?: unknown;
 };
 
 export type OpenClawReviseResult = { action: "revise"; reason: string };
@@ -18,7 +22,9 @@ export type OpenClawReviseResult = { action: "revise"; reason: string };
 // turn: `agent_turn_prepare` marks the start, `after_tool_call` records that
 // work happened, and `before_agent_finalize` feeds the shared stop policy to
 // ask for one more pass that leaves a Mainframe video. The tracker fails closed:
-// if a turn never starts or no tool work is seen, it never suggests.
+// it suggests at most once per armed turn (finalize consumes the turn back to
+// idle), only proceeds when the host reports `stopHookActive === false`, and
+// never suggests without a turn start and observed tool work.
 export type OpenClawPluginApi = {
   on(hookName: "agent_turn_prepare", handler: () => void): void;
   on(hookName: "after_tool_call", handler: () => void): void;
@@ -60,19 +66,29 @@ export function createMainframeFinalizeTracker(
     },
 
     onFinalize(event: OpenClawFinalizeEvent): OpenClawReviseResult | undefined {
-      if (event.stopHookActive || state.kind === "idle") {
+      // Fail closed on the loop guard: only a turn the host reports as not
+      // already re-prompted may proceed, so a missing/ambiguous `stopHookActive`
+      // skips instead of risking a re-suggest.
+      if (event.stopHookActive !== false || state.kind === "idle") {
         return undefined;
       }
 
+      // Consume the turn back to idle before deciding. A turn is suggested at
+      // most once: a re-finalize after a revise, or any later finalize that the
+      // host emits without a fresh `agent_turn_prepare`, hits the idle guard
+      // instead of reusing stale turn-start/work signals.
+      const { turnStartMs, workHappened } = state;
+      state = { kind: "idle" };
+
       // The finalize event has no per-message timestamps, so the turn-scoped
-      // signals collected above stand in for a transcript summary and run
-      // through the same stop policy as the other hosts. Only the current final
-      // answer is checked for an existing share; older history is intentionally
-      // not scanned so a stale Mainframe link cannot mute later turns.
+      // signals stand in for a transcript summary and run through the same stop
+      // policy as the other hosts. Only the current final answer is checked for
+      // an existing share; older history is intentionally not scanned so a stale
+      // Mainframe link cannot mute later turns.
       const summary: TranscriptSummary = {
         kind: "ready",
-        lastUserTimeMs: state.turnStartMs,
-        workHappened: state.workHappened,
+        lastUserTimeMs: turnStartMs,
+        workHappened,
         alreadyShared: hasMainframeVideoUrl(event.lastAssistantMessage),
       };
       const decision = decideStop(summary, nowMs());
@@ -89,6 +105,8 @@ export function registerMainframeHooks(
   options: MainframeTrackerOptions = {},
 ): MainframeFinalizeTracker {
   const tracker = createMainframeFinalizeTracker(options);
+  // The tracker methods close over local state, not `this`, so the host calling
+  // them detached is safe. Keep them `this`-free if this is ever refactored.
   api.on("agent_turn_prepare", tracker.onTurnPrepare);
   api.on("after_tool_call", tracker.onToolCall);
   api.on("before_agent_finalize", tracker.onFinalize);

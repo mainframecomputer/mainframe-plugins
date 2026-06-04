@@ -56,6 +56,28 @@ describe("OpenClaw before_agent_finalize hook", () => {
     expect(tracker.onFinalize({ stopHookActive: true })).toBeUndefined();
   });
 
+  it("suggests at most once per turn, so a repeat finalize does not re-fire", () => {
+    const tracker = trackerAt([userTimeMs, awayTimeMs, awayTimeMs]);
+    tracker.onTurnPrepare();
+    tracker.onToolCall();
+
+    expect(tracker.onFinalize({ stopHookActive: false })?.action).toBe("revise");
+    expect(tracker.onFinalize({ stopHookActive: false })).toBeUndefined();
+  });
+
+  it("re-arms per turn and does not carry stale work into the next turn", () => {
+    const laterTimeMs = Date.parse("2026-05-08T18:00:00.000Z");
+    const tracker = trackerAt([userTimeMs, awayTimeMs, awayTimeMs, laterTimeMs]);
+    tracker.onTurnPrepare();
+    tracker.onToolCall();
+    expect(tracker.onFinalize({ stopHookActive: false })?.action).toBe("revise");
+
+    // A fresh turn with no tool work must not fire, even though wall-clock time
+    // since the previous turn exceeds the threshold.
+    tracker.onTurnPrepare();
+    expect(tracker.onFinalize({ stopHookActive: false })).toBeUndefined();
+  });
+
   it("does not fire when the current final answer already shared a Mainframe video", () => {
     const tracker = trackerAt([userTimeMs, awayTimeMs]);
     tracker.onTurnPrepare();

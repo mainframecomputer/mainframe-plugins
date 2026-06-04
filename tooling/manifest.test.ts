@@ -115,6 +115,24 @@ describe("generated plugin manifests", () => {
     expect(manifest.configSchema.additionalProperties).toBe(false);
   });
 
+  it("package.json declares the OpenClaw code-plugin publishing contract", () => {
+    const packageOpenClawSchema = z
+      .object({
+        openclaw: z
+          .object({
+            runtimeExtensions: z.tuple([z.literal("./dist/hooks/openclaw/register.js")]),
+            compat: z.object({ pluginApi: z.literal(">=2026.6.1") }).strict(),
+            build: z.object({ openclawVersion: z.literal("2026.6.1") }).strict(),
+          })
+          .strict(),
+      })
+      .passthrough();
+
+    const pkg = packageOpenClawSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
+
+    expect(pkg.openclaw.build.openclawVersion).toBe("2026.6.1");
+  });
+
   it("Cursor marketplace metadata matches the Cursor marketplace schema", () => {
     const marketplaceSchema = z
       .object({
