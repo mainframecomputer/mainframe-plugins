@@ -13,7 +13,7 @@ export function createMainframeFinalizeTracker(options = {}) {
                     kind: "tracking",
                     turnStartMs: state.turnStartMs,
                     workHappened: true,
-                    alreadyShared: state.alreadyShared || hasMainframeVideoUrl(event.result),
+                    alreadyShared: state.alreadyShared || hasMainframeVideoUrl(event?.result),
                 };
             }
         },
@@ -28,8 +28,9 @@ export function createMainframeFinalizeTracker(options = {}) {
             const { turnStartMs, workHappened, alreadyShared } = state;
             state = { kind: "idle" };
             // Fail closed on the loop guard: proceed only when the host explicitly
-            // reports the turn is not already being re-prompted.
-            if (event.stopHookActive !== false) {
+            // reports the turn is not already being re-prompted. A missing or
+            // malformed event reads as `undefined` here and skips.
+            if (event?.stopHookActive !== false) {
                 return undefined;
             }
             // The turn-scoped signals stand in for a transcript summary and run
@@ -41,7 +42,7 @@ export function createMainframeFinalizeTracker(options = {}) {
                 kind: "ready",
                 lastUserTimeMs: turnStartMs,
                 workHappened,
-                alreadyShared: alreadyShared || hasMainframeVideoUrl(event.lastAssistantMessage),
+                alreadyShared: alreadyShared || hasMainframeVideoUrl(event?.lastAssistantMessage),
             };
             const decision = decideStop(summary, nowMs());
             return decision.kind === "suggest"

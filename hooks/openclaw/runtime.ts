@@ -27,7 +27,8 @@ export type OpenClawReviseResult = { action: "revise"; reason: string };
 // `before_agent_finalize` feeds the turn-scoped signals into the shared stop
 // policy. The tracker fails closed: any finalize spends the armed turn (so it
 // suggests at most once), it proceeds only on an explicit `stopHookActive ===
-// false`, and it never suggests without a turn start and observed tool work.
+// false`, it never suggests without a turn start and observed tool work, and a
+// missing or malformed event is tolerated as a no-op rather than throwing.
 export type OpenClawPluginApi = {
   on(hookName: "agent_turn_prepare", handler: () => void): void;
   on(hookName: "after_tool_call", handler: (event: OpenClawToolCallEvent) => void): void;
@@ -39,8 +40,8 @@ export type OpenClawPluginApi = {
 
 export type MainframeFinalizeTracker = {
   onTurnPrepare: () => void;
-  onToolCall: (event: OpenClawToolCallEvent) => void;
-  onFinalize: (event: OpenClawFinalizeEvent) => OpenClawReviseResult | undefined;
+  onToolCall: (event?: OpenClawToolCallEvent) => void;
+  onFinalize: (event?: OpenClawFinalizeEvent) => OpenClawReviseResult | undefined;
 };
 
 type TrackerState =
@@ -62,18 +63,18 @@ export function createMainframeFinalizeTracker(
       state = { kind: "tracking", turnStartMs: nowMs(), workHappened: false, alreadyShared: false };
     },
 
-    onToolCall(event: OpenClawToolCallEvent): void {
+    onToolCall(event?: OpenClawToolCallEvent): void {
       if (state.kind === "tracking") {
         state = {
           kind: "tracking",
           turnStartMs: state.turnStartMs,
           workHappened: true,
-          alreadyShared: state.alreadyShared || hasMainframeVideoUrl(event.result),
+          alreadyShared: state.alreadyShared || hasMainframeVideoUrl(event?.result),
         };
       }
     },
 
-    onFinalize(event: OpenClawFinalizeEvent): OpenClawReviseResult | undefined {
+    onFinalize(event?: OpenClawFinalizeEvent): OpenClawReviseResult | undefined {
       if (state.kind === "idle") {
         return undefined;
       }
@@ -86,8 +87,9 @@ export function createMainframeFinalizeTracker(
       state = { kind: "idle" };
 
       // Fail closed on the loop guard: proceed only when the host explicitly
-      // reports the turn is not already being re-prompted.
-      if (event.stopHookActive !== false) {
+      // reports the turn is not already being re-prompted. A missing or
+      // malformed event reads as `undefined` here and skips.
+      if (event?.stopHookActive !== false) {
         return undefined;
       }
 
@@ -100,7 +102,7 @@ export function createMainframeFinalizeTracker(
         kind: "ready",
         lastUserTimeMs: turnStartMs,
         workHappened,
-        alreadyShared: alreadyShared || hasMainframeVideoUrl(event.lastAssistantMessage),
+        alreadyShared: alreadyShared || hasMainframeVideoUrl(event?.lastAssistantMessage),
       };
       const decision = decideStop(summary, nowMs());
 

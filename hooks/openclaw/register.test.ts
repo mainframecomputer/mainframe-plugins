@@ -64,6 +64,14 @@ describe("OpenClaw before_agent_finalize hook", () => {
     expect(tracker.onFinalize({})).toBeUndefined();
   });
 
+  it("tolerates a missing event on both hooks without throwing", () => {
+    const tracker = trackerAt([userTimeMs, awayTimeMs]);
+    tracker.onTurnPrepare();
+    tracker.onToolCall();
+
+    expect(tracker.onFinalize()).toBeUndefined();
+  });
+
   it("spends the armed turn on a skipped finalize, so a later finalize cannot fire from it", () => {
     const tracker = trackerAt([userTimeMs, awayTimeMs, awayTimeMs]);
     tracker.onTurnPrepare();
