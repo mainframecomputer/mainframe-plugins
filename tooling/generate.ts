@@ -149,6 +149,7 @@ function codexMarketplace() {
 function claudeManifest() {
   return {
     ...sharedManifest,
+    displayName: metadata.displayName,
     skills: metadata.skillDirectory,
     mcpServers: metadata.mcpServers,
     hooks: CLAUDE_HOOKS,
@@ -166,6 +167,7 @@ function claudeMarketplace() {
     plugins: [
       {
         name: metadata.name,
+        displayName: metadata.displayName,
         source: "./",
         description: metadata.description,
       },

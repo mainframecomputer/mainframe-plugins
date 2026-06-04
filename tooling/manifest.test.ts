@@ -62,6 +62,7 @@ const CodexManifestSchema = SharedManifestSchema.extend({
 }).strict();
 
 const ClaudeManifestSchema = SharedManifestSchema.extend({
+  displayName: z.literal("Mainframe"),
   hooks: z.literal("./hooks/claude/hooks.json"),
 }).strict();
 
@@ -159,6 +160,7 @@ describe("generated plugin manifests", () => {
           z
             .object({
               name: z.literal("mainframe"),
+              displayName: z.literal("Mainframe"),
               source: z.literal("./"),
               description: DescriptionSchema,
             })
