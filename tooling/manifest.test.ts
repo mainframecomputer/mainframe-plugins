@@ -64,22 +64,22 @@ const ClaudeManifestSchema = SharedManifestSchema.extend({
   hooks: z.literal("./hooks/claude/hooks.json"),
 }).strict();
 
-const OpenClawManifestSchema = SharedManifestSchema.extend({
-  displayName: z.literal("Mainframe"),
-  longDescription: LongDescriptionSchema,
-  category: z.literal("Productivity"),
-  logo: z.literal("assets/logo.png"),
-  host: z.literal("openclaw"),
-  entrypoint: z.literal("./dist/hooks/openclaw/register.js"),
-  capabilities: z.tuple([z.literal("skills"), z.literal("mcp"), z.literal("hooks")]),
-  callbacks: z.tuple([
-    z.literal("agent_turn_prepare"),
-    z.literal("after_tool_call"),
-    z.literal("before_agent_finalize"),
-  ]),
-  compat: z.object({ pluginApi: z.literal(">=2026.6.1") }).strict(),
-  build: z.object({ openclawVersion: z.literal("2026.6.1") }).strict(),
-}).strict();
+// The OpenClaw manifest is its own minimal contract (id + required configSchema
+// + cold metadata), not the shared host manifest: entrypoints and catalog copy
+// are deliberately absent because OpenClaw reads those from package.json.
+const OpenClawManifestSchema = z
+  .object({
+    id: z.literal("mainframe"),
+    name: z.literal("Mainframe"),
+    description: DescriptionSchema,
+    version: z.literal("0.1.0"),
+    skills: z.tuple([z.literal("./skills")]),
+    activation: z.object({ onStartup: z.literal(true) }).strict(),
+    configSchema: z
+      .object({ type: z.literal("object"), additionalProperties: z.literal(false) })
+      .strict(),
+  })
+  .strict();
 
 describe("generated plugin manifests", () => {
   it(".cursor-plugin/plugin.json matches the Cursor plugin schema", () => {
@@ -111,8 +111,8 @@ describe("generated plugin manifests", () => {
       JSON.parse(readFileSync("openclaw.plugin.json", "utf8")),
     );
 
-    expect(manifest.host).toBe("openclaw");
-    expect(manifest.callbacks).toContain("before_agent_finalize");
+    expect(manifest.id).toBe("mainframe");
+    expect(manifest.configSchema.additionalProperties).toBe(false);
   });
 
   it("Cursor marketplace metadata matches the Cursor marketplace schema", () => {

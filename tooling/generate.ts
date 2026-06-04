@@ -31,14 +31,13 @@ const CURSOR_HOOKS = "./hooks/cursor/hooks.json";
 const CODEX_HOOKS = "./hooks/codex/hooks.json";
 const CLAUDE_HOOKS = "./hooks/claude/hooks.json";
 
-// OpenClaw loads an in-process plugin entry instead of a stdin/stdout Stop hook,
-// so it points at the built register module and declares the lifecycle hooks the
-// plugin subscribes to. The compat/build versions are what ClawHub package
-// publishing requires; track the OpenClaw release this plugin is built against.
+// OpenClaw reads code entrypoints and npm metadata from the package.json
+// `openclaw` block (not the manifest), so the built register module is declared
+// there. The compat/build versions are what ClawHub package publishing requires;
+// track the OpenClaw release this plugin is built against.
 const OPENCLAW_ENTRYPOINT = "./dist/hooks/openclaw/register.js";
 const OPENCLAW_PLUGIN_API = ">=2026.6.1";
 const OPENCLAW_VERSION = "2026.6.1";
-const OPENCLAW_CALLBACKS = ["agent_turn_prepare", "after_tool_call", "before_agent_finalize"];
 
 const metadata = MetadataSchema.parse({
   name: "mainframe",
@@ -185,25 +184,21 @@ function claudeMarketplace() {
   };
 }
 
-// OpenClaw is a native plugin host: it reads this root manifest, installs the
-// shared skill and MCP wiring, and runs the bundled lifecycle hook through the
-// built entrypoint. It reuses the same metadata as the other hosts so name,
-// version, and copy stay single-sourced.
+// The native OpenClaw manifest is intentionally minimal: it is the cold
+// metadata OpenClaw reads before loading plugin code, so it carries only plugin
+// identity, the skill directory to load, a startup activation hint for the
+// lifecycle hook, and the required (empty) config schema. Entrypoints, MCP
+// wiring, and catalog copy are not manifest fields — they live in package.json,
+// the user's openclaw.json, and the bundle markers respectively.
 function openclawManifest() {
   return {
-    ...sharedManifest,
-    displayName: metadata.displayName,
-    longDescription: metadata.longDescription,
-    category: metadata.category,
-    logo: metadata.logo,
-    skills: metadata.skillDirectory,
-    mcpServers: metadata.mcpServers,
-    host: "openclaw",
-    entrypoint: OPENCLAW_ENTRYPOINT,
-    capabilities: ["skills", "mcp", "hooks"],
-    callbacks: OPENCLAW_CALLBACKS,
-    compat: { pluginApi: OPENCLAW_PLUGIN_API },
-    build: { openclawVersion: OPENCLAW_VERSION },
+    id: metadata.name,
+    name: metadata.displayName,
+    description: metadata.description,
+    version: metadata.version,
+    skills: [metadata.skillDirectory],
+    activation: { onStartup: true },
+    configSchema: { type: "object", additionalProperties: false },
   };
 }
 
