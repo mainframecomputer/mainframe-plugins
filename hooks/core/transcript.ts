@@ -76,12 +76,14 @@ export function summarizeTranscript(
 // are which; the shared loop below decides what to do with them.
 export type ClassifiedRowKind = "user" | "work" | "ignore";
 
-// The host-agnostic accumulation pass. Hosts classify rows; this owns the
-// append-only invariants every host shares: each user turn advances the
+// The shared row-accumulation pass for hosts whose transcripts need nothing
+// beyond row classification (currently Codex and Claude Code). It owns the
+// append-only invariants those hosts share: each user turn advances the
 // non-decreasing time cursor (a regression fails closed as "unreadable") and
 // resets the per-turn work/share flags, and only post-user rows count toward
-// work or an existing share. Keeping this in one place stops the fail-closed
-// ordering rule from drifting between hosts.
+// work or an existing share. Cursor keeps its own loop because it additionally
+// validates per-tool-call timestamps against the last user turn (see
+// hooks/cursor/transcript.ts), which this classify-only pass cannot express.
 export function accumulateClassifiedRows(
   records: readonly JsonRecord[],
   classify: (record: JsonRecord) => ClassifiedRowKind,
