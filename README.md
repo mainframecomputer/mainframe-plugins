@@ -49,12 +49,19 @@ and Codex plugins.
 
 ### ClawHub (OpenClaw)
 
-[ClawHub](https://clawhub.ai) is the public skill registry for OpenClaw. The same canonical
-`share-video` skill is published there, so any OpenClaw agent can install it with the `clawhub` CLI:
+[ClawHub](https://clawhub.ai) is the public skill registry for OpenClaw. It is a publishing target
+for the existing canonical `share-video` skill, not a new supported host: the same skill folder the
+Cursor, Codex, and Claude Code plugins ship is published there, so any OpenClaw agent can install it
+with the `clawhub` CLI:
 
 ```sh
 clawhub install share-video
 ```
+
+A ClawHub install delivers the skill instructions only. The `generate_video`, `upload_video`, and
+`get_video` tools come from the hosted Mainframe MCP server (`https://mcp.mainframe.app/mcp`, which
+authenticates on install), so OpenClaw users wire that server up separately for the skill's tools to
+work.
 
 Publishing is automated by [`.github/workflows/clawhub-publish.yml`](.github/workflows/clawhub-publish.yml),
 which reuses ClawHub's official `skill-publish` reusable workflow instead of duplicating publish
