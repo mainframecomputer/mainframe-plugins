@@ -36,9 +36,10 @@ const metadata = MetadataSchema.parse({
   displayName: "Mainframe",
   packageName: "@mainframe/plugins",
   version: "0.1.0",
-  description: "Create and share short video updates from agent work.",
+  description:
+    "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
   longDescription:
-    "Watch what your agents did instead of reading through all of it. Each task wraps up with a short narrated video in your own voice and company branding, so you stay up to date at a glance and can share it with your team.",
+    "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
   category: "Productivity",
   author: {
     name: "Mainframe",
@@ -67,6 +68,7 @@ const sharedManifest = {
 function main(): void {
   writeJson(".cursor-plugin/plugin.json", {
     ...sharedManifest,
+    displayName: metadata.displayName,
     logo: metadata.logo,
     skills: metadata.skillDirectory,
     mcpServers: metadata.mcpServers,

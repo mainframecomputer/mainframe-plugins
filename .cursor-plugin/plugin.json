@@ -1,7 +1,7 @@
 {
   "name": "mainframe",
   "version": "0.1.0",
-  "description": "Create and share short video updates from agent work.",
+  "description": "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
   "author": {
     "name": "Mainframe",
     "email": "support@mainframe.app"
@@ -10,6 +10,7 @@
   "repository": "https://github.com/mainframecomputer/mainframe-plugins.git",
   "license": "UNLICENSED",
   "keywords": ["mainframe", "agent-skills", "mcp", "hooks", "video"],
+  "displayName": "Mainframe",
   "logo": "assets/logo.png",
   "skills": "./skills",
   "mcpServers": "./.mcp.json",

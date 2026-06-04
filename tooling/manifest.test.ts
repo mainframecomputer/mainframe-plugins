@@ -12,10 +12,12 @@ const AuthorSchema = z
 
 const RepositorySchema = z.literal("https://github.com/mainframecomputer/mainframe-plugins.git");
 
-const DescriptionSchema = z.literal("Create and share short video updates from agent work.");
+const DescriptionSchema = z.literal(
+  "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
+);
 
 const LongDescriptionSchema = z.literal(
-  "Watch what your agents did instead of reading through all of it. Each task wraps up with a short narrated video in your own voice and company branding, so you stay up to date at a glance and can share it with your team.",
+  "Turn agent work into videos your team can keep up with. Agents can generate a short video or upload one they recorded themselves, narrated in your voice and styled with your brand. Every video becomes a link your team can watch.",
 );
 
 const KeywordsSchema = z.tuple([
@@ -40,6 +42,7 @@ const SharedManifestSchema = z.object({
 });
 
 const CursorManifestSchema = SharedManifestSchema.extend({
+  displayName: z.literal("Mainframe"),
   logo: z.literal("assets/logo.png"),
   hooks: z.literal("./hooks/cursor/hooks.json"),
 }).strict();
