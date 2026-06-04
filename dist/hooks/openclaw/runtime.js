@@ -5,36 +5,43 @@ export function createMainframeFinalizeTracker(options = {}) {
     let state = { kind: "idle" };
     return {
         onTurnPrepare() {
-            state = { kind: "tracking", turnStartMs: nowMs(), workHappened: false };
+            state = { kind: "tracking", turnStartMs: nowMs(), workHappened: false, alreadyShared: false };
         },
-        onToolCall() {
+        onToolCall(event) {
             if (state.kind === "tracking") {
-                state = { kind: "tracking", turnStartMs: state.turnStartMs, workHappened: true };
+                state = {
+                    kind: "tracking",
+                    turnStartMs: state.turnStartMs,
+                    workHappened: true,
+                    alreadyShared: state.alreadyShared || hasMainframeVideoUrl(event.result),
+                };
             }
         },
         onFinalize(event) {
-            // Fail closed on the loop guard: only a turn the host reports as not
-            // already re-prompted may proceed, so a missing/ambiguous `stopHookActive`
-            // skips instead of risking a re-suggest.
-            if (event.stopHookActive !== false || state.kind === "idle") {
+            if (state.kind === "idle") {
                 return undefined;
             }
-            // Consume the turn back to idle before deciding. A turn is suggested at
-            // most once: a re-finalize after a revise, or any later finalize that the
-            // host emits without a fresh `agent_turn_prepare`, hits the idle guard
-            // instead of reusing stale turn-start/work signals.
-            const { turnStartMs, workHappened } = state;
+            // Any finalize attempt spends the armed turn, so a re-finalize after a
+            // revise, or a later finalize the host emits without a fresh
+            // `agent_turn_prepare`, hits the idle guard instead of reusing stale
+            // turn-start/work signals.
+            const { turnStartMs, workHappened, alreadyShared } = state;
             state = { kind: "idle" };
-            // The finalize event has no per-message timestamps, so the turn-scoped
-            // signals stand in for a transcript summary and run through the same stop
-            // policy as the other hosts. Only the current final answer is checked for
-            // an existing share; older history is intentionally not scanned so a stale
-            // Mainframe link cannot mute later turns.
+            // Fail closed on the loop guard: proceed only when the host explicitly
+            // reports the turn is not already being re-prompted.
+            if (event.stopHookActive !== false) {
+                return undefined;
+            }
+            // The turn-scoped signals stand in for a transcript summary and run
+            // through the same stop policy as the other hosts. A share counts when it
+            // appears in this turn's tool results or the current final answer; older
+            // history is intentionally not scanned so a stale link cannot mute later
+            // turns.
             const summary = {
                 kind: "ready",
                 lastUserTimeMs: turnStartMs,
                 workHappened,
-                alreadyShared: hasMainframeVideoUrl(event.lastAssistantMessage),
+                alreadyShared: alreadyShared || hasMainframeVideoUrl(event.lastAssistantMessage),
             };
             const decision = decideStop(summary, nowMs());
             return decision.kind === "suggest"

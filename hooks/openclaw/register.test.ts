@@ -18,7 +18,7 @@ describe("OpenClaw before_agent_finalize hook", () => {
   it("asks for a revise after tool work once the user is away past the threshold", () => {
     const tracker = trackerAt([userTimeMs, awayTimeMs]);
     tracker.onTurnPrepare();
-    tracker.onToolCall();
+    tracker.onToolCall({});
 
     const result = tracker.onFinalize({ stopHookActive: false });
 
@@ -30,7 +30,7 @@ describe("OpenClaw before_agent_finalize hook", () => {
   it("does not fire before the fixed one-hour threshold", () => {
     const tracker = trackerAt([userTimeMs, Date.parse("2026-05-08T13:30:00.000Z")]);
     tracker.onTurnPrepare();
-    tracker.onToolCall();
+    tracker.onToolCall({});
 
     expect(tracker.onFinalize({ stopHookActive: false })).toBeUndefined();
   });
@@ -51,15 +51,35 @@ describe("OpenClaw before_agent_finalize hook", () => {
   it("does not fire after a continuation already re-prompted the agent", () => {
     const tracker = trackerAt([userTimeMs, awayTimeMs]);
     tracker.onTurnPrepare();
-    tracker.onToolCall();
+    tracker.onToolCall({});
 
     expect(tracker.onFinalize({ stopHookActive: true })).toBeUndefined();
+  });
+
+  it("fails closed when the host omits stopHookActive", () => {
+    const tracker = trackerAt([userTimeMs, awayTimeMs]);
+    tracker.onTurnPrepare();
+    tracker.onToolCall({});
+
+    expect(tracker.onFinalize({})).toBeUndefined();
+  });
+
+  it("spends the armed turn on a skipped finalize, so a later finalize cannot fire from it", () => {
+    const tracker = trackerAt([userTimeMs, awayTimeMs, awayTimeMs]);
+    tracker.onTurnPrepare();
+    tracker.onToolCall({});
+
+    // The host re-prompts (stopHookActive true), so this finalize is skipped...
+    expect(tracker.onFinalize({ stopHookActive: true })).toBeUndefined();
+    // ...and the turn is now spent: a later finalize without a fresh turn must
+    // not revive the stale turn-start/work signals.
+    expect(tracker.onFinalize({ stopHookActive: false })).toBeUndefined();
   });
 
   it("suggests at most once per turn, so a repeat finalize does not re-fire", () => {
     const tracker = trackerAt([userTimeMs, awayTimeMs, awayTimeMs]);
     tracker.onTurnPrepare();
-    tracker.onToolCall();
+    tracker.onToolCall({});
 
     expect(tracker.onFinalize({ stopHookActive: false })?.action).toBe("revise");
     expect(tracker.onFinalize({ stopHookActive: false })).toBeUndefined();
@@ -69,7 +89,7 @@ describe("OpenClaw before_agent_finalize hook", () => {
     const laterTimeMs = Date.parse("2026-05-08T18:00:00.000Z");
     const tracker = trackerAt([userTimeMs, awayTimeMs, awayTimeMs, laterTimeMs]);
     tracker.onTurnPrepare();
-    tracker.onToolCall();
+    tracker.onToolCall({});
     expect(tracker.onFinalize({ stopHookActive: false })?.action).toBe("revise");
 
     // A fresh turn with no tool work must not fire, even though wall-clock time
@@ -81,7 +101,7 @@ describe("OpenClaw before_agent_finalize hook", () => {
   it("does not fire when the current final answer already shared a Mainframe video", () => {
     const tracker = trackerAt([userTimeMs, awayTimeMs]);
     tracker.onTurnPrepare();
-    tracker.onToolCall();
+    tracker.onToolCall({});
 
     expect(
       tracker.onFinalize({
@@ -91,10 +111,21 @@ describe("OpenClaw before_agent_finalize hook", () => {
     ).toBeUndefined();
   });
 
+  it("does not fire when a Mainframe video appears in a tool result this turn", () => {
+    const tracker = trackerAt([userTimeMs, awayTimeMs]);
+    tracker.onTurnPrepare();
+    tracker.onToolCall({ result: { watchUrl: sharedVideoUrl } });
+
+    // The final answer omits the link, but the share already happened via a tool.
+    expect(
+      tracker.onFinalize({ stopHookActive: false, lastAssistantMessage: "Shared the video." }),
+    ).toBeUndefined();
+  });
+
   it("derives its suggestion from elapsed time only and never echoes turn content", () => {
     const tracker = trackerAt([userTimeMs, awayTimeMs]);
     tracker.onTurnPrepare();
-    tracker.onToolCall();
+    tracker.onToolCall({});
 
     const result = tracker.onFinalize({
       stopHookActive: false,
