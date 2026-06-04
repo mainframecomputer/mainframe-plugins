@@ -58,45 +58,39 @@ function classifyClaudeRow(record: JsonRecord): ClassifiedRowKind {
     return hasToolUseBlock(message.content) ? "work" : "ignore";
   }
 
+  // A genuine user turn is a non-synthetic entry that carries human text. The
+  // marker check is the authoritative gate; the text check then separates a real
+  // prompt from a contentless or image-only entry.
   if (isSyntheticUserEntry(record)) {
     return "ignore";
   }
 
-  return isRealUserMessage(message) ? "user" : "ignore";
+  return messageHasText(message.content) ? "user" : "ignore";
 }
 
 // Claude Code logs tool results and system-injected notes with the same
 // `type: "user"` shape as real prompts, told apart only by record-level markers
 // rather than message content (https://github.com/anthropics/claude-code/issues/26508):
 // `toolUseResult`/`sourceToolAssistantUUID` mark a tool result, and `isMeta`
-// marks an injected note. Excluding these keeps the AFK timer anchored to
-// genuine prompts so the hook still fires after the user has actually left.
+// marks an injected note. A tool result can even carry plain-string content, so
+// these markers — not the content shape — are the authoritative signal that
+// keeps the AFK timer anchored to genuine prompts.
 function isSyntheticUserEntry(record: JsonRecord): boolean {
   return (
-    record.isMeta === true ||
     record.toolUseResult !== undefined ||
-    typeof record.sourceToolAssistantUUID === "string"
+    typeof record.sourceToolAssistantUUID === "string" ||
+    record.isMeta === true
   );
 }
 
-// Content-level check for a genuine prompt, applied once record-level synthetic
-// markers are ruled out: accept a plain string or content blocks with a
-// non-empty `text` block, and still reject any residual `tool_result` blocks.
-function isRealUserMessage(message: JsonRecord): boolean {
-  const content = message.content;
+// Whether a user message carries human prompt text: a plain string, or content
+// blocks that include a non-empty `text` block.
+function messageHasText(content: unknown): boolean {
   if (isNonEmptyString(content)) {
     return true;
   }
 
-  if (!Array.isArray(content)) {
-    return false;
-  }
-
-  if (content.some(isToolResultBlock)) {
-    return false;
-  }
-
-  return content.some(isNonEmptyTextBlock);
+  return Array.isArray(content) && content.some(isNonEmptyTextBlock);
 }
 
 function hasToolUseBlock(content: unknown): boolean {
@@ -105,10 +99,6 @@ function hasToolUseBlock(content: unknown): boolean {
 
 function isToolUseBlock(block: unknown): boolean {
   return isJsonRecord(block) && block.type === "tool_use";
-}
-
-function isToolResultBlock(block: unknown): boolean {
-  return isJsonRecord(block) && block.type === "tool_result";
 }
 
 function isNonEmptyTextBlock(block: unknown): boolean {

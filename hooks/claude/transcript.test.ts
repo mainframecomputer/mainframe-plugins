@@ -432,6 +432,8 @@ function toolResult(timestamp: string, content: string): Record<string, unknown>
     sessionId: "session-1",
     type: "user",
     message: { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu_1", content }] },
+    toolUseResult: { stdout: content, stderr: "", interrupted: false },
+    sourceToolAssistantUUID: "assistant-1",
     uuid: `tool-result-${timestamp}`,
     timestamp,
   };
