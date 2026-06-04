@@ -15,12 +15,12 @@ focused on the Cursor, Codex, Claude Code, and OpenClaw manifests, hosted MCP wi
   `hooks/openclaw/register.ts` and maps the shared AFK gate onto the `before_agent_finalize`
   lifecycle hook. Do not add other host surfaces unless the product task explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
-- Generated Cursor, Codex, and Claude Code manifest and marketplace files come from
+- Generated Cursor, Codex, Claude Code, and OpenClaw manifest and marketplace files come from
   `tooling/generate.ts`; edit the config there, then run `bun run generate`.
 - The canonical skill is `skills/share-video/SKILL.md`.
-- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and
-  `.claude-plugin/`. Do not add package-local docs or extra top-level markdown unless the user
-  asks; improve `README.md` or this file instead.
+- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`,
+  `.claude-plugin/`, and `openclaw.plugin.json`. Do not add package-local docs or extra top-level
+  markdown unless the user asks; improve `README.md` or this file instead.
 
 ## Start here
 

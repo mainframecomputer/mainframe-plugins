@@ -1,5 +1,5 @@
-import { evaluateAfkGate } from "../core/afk-gate.js";
-import { hasMainframeVideoUrl } from "../core/transcript.js";
+import { decideStop } from "../core/stop-policy.js";
+import { hasMainframeVideoUrl, type TranscriptSummary } from "../core/transcript.js";
 
 // Minimal local mirror of the OpenClaw plugin hook surface this plugin uses,
 // per https://docs.openclaw.ai/plugins/hooks (openclaw 2026.6.1). Like the
@@ -8,7 +8,6 @@ import { hasMainframeVideoUrl } from "../core/transcript.js";
 export type OpenClawFinalizeEvent = {
   stopHookActive: boolean;
   lastAssistantMessage?: string;
-  messages?: unknown[];
 };
 
 export type OpenClawReviseResult = { action: "revise"; reason: string };
@@ -17,9 +16,9 @@ export type OpenClawReviseResult = { action: "revise"; reason: string };
 // of the stdin/stdout Stop hook the other hosts use, and its event carries no
 // per-message wall-clock time. Elapsed time is therefore measured across the
 // turn: `agent_turn_prepare` marks the start, `after_tool_call` records that
-// work happened, and `before_agent_finalize` reuses the shared AFK gate to ask
-// for one more pass that leaves a Mainframe video. The tracker fails closed: if
-// a turn never starts or no tool work is seen, it never suggests.
+// work happened, and `before_agent_finalize` feeds the shared stop policy to
+// ask for one more pass that leaves a Mainframe video. The tracker fails closed:
+// if a turn never starts or no tool work is seen, it never suggests.
 export type OpenClawPluginApi = {
   on(hookName: "agent_turn_prepare", handler: () => void): void;
   on(hookName: "after_tool_call", handler: () => void): void;
@@ -65,14 +64,22 @@ export function createMainframeFinalizeTracker(
         return undefined;
       }
 
-      const gate = evaluateAfkGate({
-        stopTimeMs: nowMs(),
+      // The finalize event has no per-message timestamps, so the turn-scoped
+      // signals collected above stand in for a transcript summary and run
+      // through the same stop policy as the other hosts. Only the current final
+      // answer is checked for an existing share; older history is intentionally
+      // not scanned so a stale Mainframe link cannot mute later turns.
+      const summary: TranscriptSummary = {
+        kind: "ready",
         lastUserTimeMs: state.turnStartMs,
         workHappened: state.workHappened,
-        alreadyShared: alreadySharedFromEvent(event),
-      });
+        alreadyShared: hasMainframeVideoUrl(event.lastAssistantMessage),
+      };
+      const decision = decideStop(summary, nowMs());
 
-      return gate.fire ? { action: "revise", reason: gate.reason } : undefined;
+      return decision.kind === "suggest"
+        ? { action: "revise", reason: decision.message }
+        : undefined;
     },
   };
 }
@@ -86,8 +93,4 @@ export function registerMainframeHooks(
   api.on("after_tool_call", tracker.onToolCall);
   api.on("before_agent_finalize", tracker.onFinalize);
   return tracker;
-}
-
-function alreadySharedFromEvent(event: OpenClawFinalizeEvent): boolean {
-  return hasMainframeVideoUrl(event.lastAssistantMessage) || hasMainframeVideoUrl(event.messages);
 }

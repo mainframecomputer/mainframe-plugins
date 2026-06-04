@@ -1,4 +1,4 @@
-import { evaluateAfkGate } from "../core/afk-gate.js";
+import { decideStop } from "../core/stop-policy.js";
 import { hasMainframeVideoUrl } from "../core/transcript.js";
 export function createMainframeFinalizeTracker(options = {}) {
     const nowMs = options.nowMs ?? (() => Date.now());
@@ -16,13 +16,21 @@ export function createMainframeFinalizeTracker(options = {}) {
             if (event.stopHookActive || state.kind === "idle") {
                 return undefined;
             }
-            const gate = evaluateAfkGate({
-                stopTimeMs: nowMs(),
+            // The finalize event has no per-message timestamps, so the turn-scoped
+            // signals collected above stand in for a transcript summary and run
+            // through the same stop policy as the other hosts. Only the current final
+            // answer is checked for an existing share; older history is intentionally
+            // not scanned so a stale Mainframe link cannot mute later turns.
+            const summary = {
+                kind: "ready",
                 lastUserTimeMs: state.turnStartMs,
                 workHappened: state.workHappened,
-                alreadyShared: alreadySharedFromEvent(event),
-            });
-            return gate.fire ? { action: "revise", reason: gate.reason } : undefined;
+                alreadyShared: hasMainframeVideoUrl(event.lastAssistantMessage),
+            };
+            const decision = decideStop(summary, nowMs());
+            return decision.kind === "suggest"
+                ? { action: "revise", reason: decision.message }
+                : undefined;
         },
     };
 }
@@ -32,7 +40,4 @@ export function registerMainframeHooks(api, options = {}) {
     api.on("after_tool_call", tracker.onToolCall);
     api.on("before_agent_finalize", tracker.onFinalize);
     return tracker;
-}
-function alreadySharedFromEvent(event) {
-    return hasMainframeVideoUrl(event.lastAssistantMessage) || hasMainframeVideoUrl(event.messages);
 }

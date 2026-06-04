@@ -32,12 +32,13 @@ const CODEX_HOOKS = "./hooks/codex/hooks.json";
 const CLAUDE_HOOKS = "./hooks/claude/hooks.json";
 
 // OpenClaw reads code entrypoints and npm metadata from the package.json
-// `openclaw` block (not the manifest), so the built register module is declared
-// there. The compat/build versions are what ClawHub package publishing requires;
-// track the OpenClaw release this plugin is built against.
-const OPENCLAW_ENTRYPOINT = "./dist/hooks/openclaw/register.js";
-const OPENCLAW_PLUGIN_API = ">=2026.6.1";
+// `openclaw` block (not the manifest). We ship built JS, so the register module
+// is declared as a `runtimeExtensions` entry. The compat/build versions are what
+// ClawHub package publishing requires; track the OpenClaw release this plugin is
+// built against.
+const OPENCLAW_RUNTIME_ENTRYPOINT = "./dist/hooks/openclaw/register.js";
 const OPENCLAW_VERSION = "2026.6.1";
+const OPENCLAW_PLUGIN_API = `>=${OPENCLAW_VERSION}`;
 
 const metadata = MetadataSchema.parse({
   name: "mainframe",
@@ -207,7 +208,7 @@ function updatePackageJson(): void {
   packageJson.name = metadata.packageName;
   packageJson.version = metadata.version;
   packageJson.description =
-    "Mainframe Cursor, Codex, and Claude Code plugin manifests, skill, MCP wiring, and stop hooks.";
+    "Mainframe Cursor, Codex, Claude Code, and OpenClaw plugin manifests, skill, MCP wiring, and stop hooks.";
   packageJson.private = true;
   packageJson.license = metadata.license;
   packageJson.homepage = metadata.homepage;
@@ -217,7 +218,7 @@ function updatePackageJson(): void {
   };
   packageJson.keywords = metadata.keywords;
   packageJson.openclaw = {
-    extensions: [OPENCLAW_ENTRYPOINT],
+    runtimeExtensions: [OPENCLAW_RUNTIME_ENTRYPOINT],
     compat: { pluginApi: OPENCLAW_PLUGIN_API },
     build: { openclawVersion: OPENCLAW_VERSION },
   };

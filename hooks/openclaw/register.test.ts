@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import plugin, { registerMainframeHooks } from "./register.js";
-import {
-  createMainframeFinalizeTracker,
-  type OpenClawFinalizeEvent,
-  type OpenClawPluginApi,
-} from "./runtime.js";
+import { createMainframeFinalizeTracker, type OpenClawPluginApi } from "./runtime.js";
 
 const userTimeMs = Date.parse("2026-05-08T13:00:00.000Z");
 const awayTimeMs = Date.parse("2026-05-08T15:30:00.000Z");
@@ -60,14 +56,17 @@ describe("OpenClaw before_agent_finalize hook", () => {
     expect(tracker.onFinalize({ stopHookActive: true })).toBeUndefined();
   });
 
-  it("does not fire after a Mainframe video URL already appears in the turn", () => {
-    for (const event of sharedEvents()) {
-      const tracker = trackerAt([userTimeMs, awayTimeMs]);
-      tracker.onTurnPrepare();
-      tracker.onToolCall();
+  it("does not fire when the current final answer already shared a Mainframe video", () => {
+    const tracker = trackerAt([userTimeMs, awayTimeMs]);
+    tracker.onTurnPrepare();
+    tracker.onToolCall();
 
-      expect(tracker.onFinalize(event)).toBeUndefined();
-    }
+    expect(
+      tracker.onFinalize({
+        stopHookActive: false,
+        lastAssistantMessage: `Shared: ${sharedVideoUrl}`,
+      }),
+    ).toBeUndefined();
   });
 
   it("derives its suggestion from elapsed time only and never echoes turn content", () => {
@@ -78,11 +77,9 @@ describe("OpenClaw before_agent_finalize hook", () => {
     const result = tracker.onFinalize({
       stopHookActive: false,
       lastAssistantMessage: "SECRET_NEVER_LEAK",
-      messages: [{ text: "ANOTHER_SECRET" }],
     });
 
     expect(result?.reason).not.toContain("SECRET_NEVER_LEAK");
-    expect(result?.reason).not.toContain("ANOTHER_SECRET");
   });
 
   it("exports a default plugin entry that registers the OpenClaw hook names in order", () => {
@@ -104,10 +101,3 @@ describe("OpenClaw before_agent_finalize hook", () => {
     expect(names).toEqual(["agent_turn_prepare", "after_tool_call", "before_agent_finalize"]);
   });
 });
-
-function sharedEvents(): OpenClawFinalizeEvent[] {
-  return [
-    { stopHookActive: false, lastAssistantMessage: `Shared: ${sharedVideoUrl}` },
-    { stopHookActive: false, messages: [{ output: `Shared: ${sharedVideoUrl}` }] },
-  ];
-}
