@@ -7,6 +7,9 @@ description: |
   for trivial answers, active back-and-forth, unfinished work, or sensitive
   data.
 author: Mainframe
+metadata:
+  openclaw:
+    homepage: https://mainframe.app
 ---
 
 # Share video

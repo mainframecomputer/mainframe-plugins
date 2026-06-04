@@ -47,6 +47,21 @@ claude
 The Claude Code plugin gives Claude the same `share-video` skill and Mainframe tools as the Cursor
 and Codex plugins.
 
+### ClawHub (OpenClaw)
+
+[ClawHub](https://clawhub.ai) is the public skill registry for OpenClaw. The same canonical
+`share-video` skill is published there, so any OpenClaw agent can install it with the `clawhub` CLI:
+
+```sh
+clawhub install share-video
+```
+
+Publishing is automated by [`.github/workflows/clawhub-publish.yml`](.github/workflows/clawhub-publish.yml),
+which reuses ClawHub's official `skill-publish` reusable workflow instead of duplicating publish
+logic. Pull requests run a dry-run preview, and a manual `workflow_dispatch` run performs the real
+publish. A real publish needs a `CLAWHUB_TOKEN` repository secret and an `owner` handle; publishing
+to ClawHub releases the skill under `MIT-0`.
+
 ## Included skill
 
 - `share-video` — share a short video that explains what the agent did, useful for demos,

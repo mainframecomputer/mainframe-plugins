@@ -1,0 +1,35 @@
+name: ClawHub publish
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      owner:
+        description: ClawHub owner or publisher handle. Leave empty to publish as the authenticated user.
+        type: string
+        required: false
+        default: ""
+
+permissions: {}
+
+jobs:
+  dry-run:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
+    uses: openclaw/clawhub/.github/workflows/skill-publish.yml@v0.19.0
+    with:
+      dry_run: true
+
+  publish:
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      id-token: write
+    uses: openclaw/clawhub/.github/workflows/skill-publish.yml@v0.19.0
+    with:
+      owner: ${{ inputs.owner }}
+      dry_run: false
+    secrets:
+      clawhub_token: ${{ secrets.CLAWHUB_TOKEN }}
