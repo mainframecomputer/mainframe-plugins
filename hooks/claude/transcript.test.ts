@@ -73,6 +73,83 @@ describe("summarizeClaudeTranscript", () => {
     });
   });
 
+  it("does not let a tool-result entry with string content reset the AFK timer", () => {
+    const summary = summarizeClaudeTranscript(
+      claudeTranscript([
+        userMessage("2026-05-08T13:00:00.000Z", "please work on this"),
+        assistantToolUse("2026-05-08T13:05:00.000Z"),
+        {
+          type: "user",
+          timestamp: "2026-05-08T13:06:00.000Z",
+          sessionId: "session-1",
+          uuid: "tool-result-1",
+          parentUuid: "assistant-1",
+          sourceToolAssistantUUID: "assistant-1",
+          toolUseResult: { stdout: "build succeeded", stderr: "", interrupted: false },
+          message: { role: "user", content: "build succeeded" },
+        },
+      ]),
+    );
+
+    expect(summary).toEqual({
+      kind: "ready",
+      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
+      workHappened: true,
+      alreadyShared: false,
+    });
+  });
+
+  it("does not treat an entry carrying only sourceToolAssistantUUID as a user turn", () => {
+    const summary = summarizeClaudeTranscript(
+      claudeTranscript([
+        userMessage("2026-05-08T13:00:00.000Z", "please work on this"),
+        assistantToolUse("2026-05-08T13:05:00.000Z"),
+        {
+          type: "user",
+          timestamp: "2026-05-08T13:06:00.000Z",
+          sessionId: "session-1",
+          uuid: "tool-result-2",
+          parentUuid: "assistant-1",
+          sourceToolAssistantUUID: "assistant-1",
+          message: { role: "user", content: "some tool output text" },
+        },
+      ]),
+    );
+
+    expect(summary).toMatchObject({
+      kind: "ready",
+      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
+      workHappened: true,
+    });
+  });
+
+  it("does not let an isMeta system-injected note reset the AFK timer", () => {
+    const summary = summarizeClaudeTranscript(
+      claudeTranscript([
+        userMessage("2026-05-08T13:00:00.000Z", "please work on this"),
+        assistantToolUse("2026-05-08T13:05:00.000Z"),
+        {
+          type: "user",
+          timestamp: "2026-05-08T14:00:00.000Z",
+          sessionId: "session-1",
+          uuid: "meta-1",
+          parentUuid: "assistant-1",
+          isMeta: true,
+          message: {
+            role: "user",
+            content: "<system-reminder>You are running low on context.</system-reminder>",
+          },
+        },
+      ]),
+    );
+
+    expect(summary).toMatchObject({
+      kind: "ready",
+      lastUserTimeMs: Date.parse("2026-05-08T13:00:00.000Z"),
+      workHappened: true,
+    });
+  });
+
   it("counts work done through MCP tool_use blocks", () => {
     const summary = summarizeClaudeTranscript(
       claudeTranscript([

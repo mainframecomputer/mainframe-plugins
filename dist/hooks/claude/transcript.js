@@ -8,11 +8,12 @@ export function summarizeClaudeTranscript(text) {
 }
 // Claude Code transcripts are append-only JSONL where each line is a typed
 // entry. A real user turn is `{ type: "user", message: { content } }` carrying
-// human text; tool results reuse the same `user` type but carry `tool_result`
-// blocks, so they must not reset the AFK timer. Assistant `tool_use` blocks
-// count as work. Unrelated entry types (system, summary, ...) are ignored, but
-// a transcript with no recognizable Claude message entry fails closed as
-// "unreadable" so the hook never fires on a foreign or empty format.
+// human text. Tool results and system-injected notes reuse the same
+// `type: "user"` shape and are distinguished only by record-level markers (see
+// `isSyntheticUserEntry`), so they must not reset the AFK timer. Assistant
+// `tool_use` blocks count as work. Unrelated entry types (system, summary, ...)
+// are ignored, but a transcript with no recognizable Claude message entry fails
+// closed as "unreadable" so the hook never fires on a foreign or empty format.
 function parseClaudeRows(text) {
     const records = parseJsonlRecords(text);
     if (records === "unreadable") {
@@ -39,12 +40,25 @@ function classifyClaudeRow(record) {
     if (record.type === "assistant") {
         return hasToolUseBlock(message.content) ? "work" : "ignore";
     }
+    if (isSyntheticUserEntry(record)) {
+        return "ignore";
+    }
     return isRealUserMessage(message) ? "user" : "ignore";
 }
-// A real user turn carries human text: either a plain string or content blocks
-// that include a non-empty `text` block. Tool-result turns reuse the `user`
-// type but carry `tool_result` blocks instead of prompt text, so they are
-// excluded to keep the AFK timer anchored to genuine user activity.
+// Claude Code logs tool results and system-injected notes with the same
+// `type: "user"` shape as real prompts, told apart only by record-level markers
+// rather than message content (https://github.com/anthropics/claude-code/issues/26508):
+// `toolUseResult`/`sourceToolAssistantUUID` mark a tool result, and `isMeta`
+// marks an injected note. Excluding these keeps the AFK timer anchored to
+// genuine prompts so the hook still fires after the user has actually left.
+function isSyntheticUserEntry(record) {
+    return (record.isMeta === true ||
+        record.toolUseResult !== undefined ||
+        typeof record.sourceToolAssistantUUID === "string");
+}
+// Content-level check for a genuine prompt, applied once record-level synthetic
+// markers are ruled out: accept a plain string or content blocks with a
+// non-empty `text` block, and still reject any residual `tool_result` blocks.
 function isRealUserMessage(message) {
     const content = message.content;
     if (isNonEmptyString(content)) {
