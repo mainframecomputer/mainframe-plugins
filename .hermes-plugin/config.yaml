@@ -3,3 +3,4 @@
 mcp_servers:
   mainframe:
     url: https://mcp.mainframe.app/mcp
+    auth: oauth

@@ -173,21 +173,25 @@ describe("generated plugin manifests", () => {
 });
 
 describe("generated Hermes plugin config", () => {
-  it(".hermes-plugin/config.yaml wires the Mainframe MCP server", () => {
-    const configSchema = z
+  it("re-expresses every .mcp.json server for Hermes with the OAuth opt-in", () => {
+    const { mcpServers } = z
+      .object({ mcpServers: z.record(z.string(), z.object({ url: z.string() }).passthrough()) })
+      .parse(JSON.parse(readFileSync(".mcp.json", "utf8")));
+
+    const { mcp_servers } = z
       .object({
-        mcp_servers: z
-          .object({
-            mainframe: z.object({ url: z.literal("https://mcp.mainframe.app/mcp") }).strict(),
-          })
-          .strict(),
+        mcp_servers: z.record(
+          z.string(),
+          z.object({ url: z.string(), auth: z.literal("oauth") }).passthrough(),
+        ),
       })
-      .strict();
+      .strict()
+      .parse(parseYaml(readFileSync(".hermes-plugin/config.yaml", "utf8")));
 
-    const config = configSchema.parse(
-      parseYaml(readFileSync(".hermes-plugin/config.yaml", "utf8")),
-    );
-
-    expect(config.mcp_servers.mainframe.url).toBe("https://mcp.mainframe.app/mcp");
+    expect(Object.keys(mcp_servers)).toEqual(Object.keys(mcpServers));
+    for (const [name, server] of Object.entries(mcpServers)) {
+      expect(mcp_servers[name].url).toBe(server.url);
+      expect(mcp_servers[name].auth).toBe("oauth");
+    }
   });
 });

@@ -11,8 +11,9 @@ const JsonRecordSchema = z.record(z.string(), z.unknown());
 // Codex, and Claude Code reference the file directly; Hermes is config-driven
 // and needs the same servers re-expressed as YAML, so we read them from here
 // instead of restating the URL.
+const McpServerSchema = z.object({ url: z.string().url() }).passthrough();
 const McpConfigSchema = z.object({
-  mcpServers: z.record(z.string(), JsonRecordSchema),
+  mcpServers: z.record(z.string(), McpServerSchema),
 });
 
 const MetadataSchema = z.object({
@@ -113,7 +114,15 @@ function main(): void {
 
 function hermesConfig() {
   const mcp = McpConfigSchema.parse(JSON.parse(readFileSync(".mcp.json", "utf8")));
-  return { mcp_servers: mcp.mcpServers };
+  // Hermes only runs the OAuth flow for a hosted MCP server when its entry opts
+  // in with `auth: oauth`; it does not auto-negotiate from a bare URL the way the
+  // marketplace hosts do. The Mainframe MCP is OAuth-protected, so add the opt-in
+  // to each server. McpServerSchema's `url` requirement fails closed if .mcp.json
+  // ever adds a server shape Hermes would need to handle differently.
+  const servers = Object.fromEntries(
+    Object.entries(mcp.mcpServers).map(([name, server]) => [name, { ...server, auth: "oauth" }]),
+  );
+  return { mcp_servers: servers };
 }
 
 function cursorMarketplace() {

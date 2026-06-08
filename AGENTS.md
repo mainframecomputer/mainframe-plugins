@@ -13,7 +13,10 @@ focused on the Cursor, Codex, Claude Code, and Hermes manifests, hosted MCP wiri
   stop-hook runtime. Codex and Claude Code share the same Stop hook contract, so they both use
   `hooks/core/stop-hook.ts`; only the transcript parser differs per host. Hermes is config-driven
   and ships only the `share-video` skill plus the MCP server, generated as a
-  `.hermes-plugin/config.yaml` fragment users merge into `~/.hermes/config.yaml`. Hermes ships no
+  `.hermes-plugin/config.yaml` fragment users merge into `~/.hermes/config.yaml`. The generated
+  `mcp_servers` entry sets `auth: oauth` because Hermes only runs the OAuth flow for a hosted MCP
+  server when the entry opts in (it does not auto-negotiate from a bare URL like the marketplace
+  hosts), so `tooling/generate.ts` adds it when re-expressing `./.mcp.json`. Hermes ships no
   stop hook: no Hermes stop event's return value can re-engage the agent (`post_llm_call`,
   `on_session_end`, and friends are observers; shell hooks — the `hooks/core` analog — only act on
   `pre_tool_call` and a turn-start `pre_llm_call`), so there is nothing for the `hooks/core` runtime

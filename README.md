@@ -64,7 +64,10 @@ add the Mainframe MCP server.
    mcp_servers:
      mainframe:
        url: https://mcp.mainframe.app/mcp
+       auth: oauth
    ```
+
+   On first use, Hermes opens your browser to authorize Mainframe.
 
 This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts.
 
