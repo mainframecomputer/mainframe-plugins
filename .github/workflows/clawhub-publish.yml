@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       owner:
-        description: ClawHub owner or publisher handle for the skill and package. Leave empty to publish as the authenticated user.
+        description: ClawHub owner or publisher handle for the skill publish. Leave empty to publish as the authenticated user.
         type: string
         required: false
         default: ""
