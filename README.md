@@ -49,12 +49,20 @@ and Codex plugins.
 
 ### Hermes
 
-[Hermes](https://hermes-agent.nousresearch.com) is config-driven rather than manifest-based, so the
-Mainframe plugin for Hermes is the shared `share-video` skill plus the Mainframe MCP server wired
-through `~/.hermes/config.yaml`. The generated MCP fragment to merge in lives at
-`.hermes-plugin/config.yaml`.
+[Hermes](https://hermes-agent.nousresearch.com) is config-driven rather than manifest-based, so
+Mainframe for Hermes is the shared `share-video` skill plus the Mainframe MCP server. Both install
+through Hermes' own native flows — there is no plugin manifest to generate.
 
-1. Add the Mainframe MCP server to `~/.hermes/config.yaml`:
+1. Install the `share-video` skill straight from this repository:
+
+   ```sh
+   hermes skills install mainframecomputer/mainframe-plugins/skills/share-video
+   ```
+
+   For local development you can instead point `skills.external_dirs` in `~/.hermes/config.yaml` at
+   this repository's `skills` directory.
+
+2. Add the Mainframe MCP server to `~/.hermes/config.yaml`:
 
    ```yaml
    mcp_servers:
@@ -62,18 +70,12 @@ through `~/.hermes/config.yaml`. The generated MCP fragment to merge in lives at
        url: https://mcp.mainframe.app/mcp
    ```
 
-2. Load the `share-video` skill by pointing Hermes at this repository's `skills` directory:
+   The same `mcp_servers` block is generated to `.hermes-plugin/config.yaml` for easy copy-paste.
 
-   ```yaml
-   skills:
-     external_dirs:
-       - /absolute/path/to/mainframe-plugins/skills
-   ```
-
-This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts. Hermes does
-not ship a stop hook: it has no hook event that fires when the agent stops and can re-engage it (the
-other hosts' nudge relies on that), so on Hermes the agent reaches for the `share-video` skill on
-its own, guided by the skill's own "use when" criteria.
+This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts. Hermes ships
+no stop hook: it has no hook event that fires when the agent stops and can re-engage it (the other
+hosts' nudge relies on that), so on Hermes the agent reaches for the `share-video` skill on its own,
+guided by the skill's own "use when" criteria.
 
 ## Included skill
 
