@@ -31,15 +31,6 @@ const CURSOR_HOOKS = "./hooks/cursor/hooks.json";
 const CODEX_HOOKS = "./hooks/codex/hooks.json";
 const CLAUDE_HOOKS = "./hooks/claude/hooks.json";
 
-// OpenClaw reads code entrypoints and npm metadata from the package.json
-// `openclaw` block (not the manifest). We ship built JS, so the register module
-// is declared as a `runtimeExtensions` entry. The compat/build versions are what
-// ClawHub package publishing requires; track the OpenClaw release this plugin is
-// built against.
-const OPENCLAW_RUNTIME_ENTRYPOINT = "./dist/hooks/openclaw/register.js";
-const OPENCLAW_VERSION = "2026.6.1";
-const OPENCLAW_PLUGIN_API = `>=${OPENCLAW_VERSION}`;
-
 const metadata = MetadataSchema.parse({
   name: "mainframe",
   displayName: "Mainframe",
@@ -89,8 +80,6 @@ function main(): void {
 
   writeJson(".claude-plugin/plugin.json", claudeManifest());
   writeJson(".claude-plugin/marketplace.json", claudeMarketplace());
-
-  writeJson("openclaw.plugin.json", openclawManifest());
 
   updatePackageJson();
 }
@@ -185,30 +174,12 @@ function claudeMarketplace() {
   };
 }
 
-// The native OpenClaw manifest is intentionally minimal: it is the cold
-// metadata OpenClaw reads before loading plugin code, so it carries only plugin
-// identity, the skill directory to load, a startup activation hint for the
-// lifecycle hook, and the required (empty) config schema. Entrypoints, MCP
-// wiring, and catalog copy are not manifest fields — they live in package.json,
-// the user's openclaw.json, and the bundle markers respectively.
-function openclawManifest() {
-  return {
-    id: metadata.name,
-    name: metadata.displayName,
-    description: metadata.description,
-    version: metadata.version,
-    skills: [metadata.skillDirectory],
-    activation: { onStartup: true },
-    configSchema: { type: "object", additionalProperties: false },
-  };
-}
-
 function updatePackageJson(): void {
   const packageJson = JsonRecordSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
   packageJson.name = metadata.packageName;
   packageJson.version = metadata.version;
   packageJson.description =
-    "Mainframe Cursor, Codex, Claude Code, and OpenClaw plugin manifests, skill, MCP wiring, and stop hooks.";
+    "Mainframe Cursor, Codex, and Claude Code plugin manifests, skill, MCP wiring, and stop hooks.";
   packageJson.private = true;
   packageJson.license = metadata.license;
   packageJson.homepage = metadata.homepage;
@@ -217,11 +188,6 @@ function updatePackageJson(): void {
     url: metadata.repository,
   };
   packageJson.keywords = metadata.keywords;
-  packageJson.openclaw = {
-    runtimeExtensions: [OPENCLAW_RUNTIME_ENTRYPOINT],
-    compat: { pluginApi: OPENCLAW_PLUGIN_API },
-    build: { openclawVersion: OPENCLAW_VERSION },
-  };
   packageJson.bin = {
     "mainframe-hook-cursor": "./dist/hooks/cursor/stop.js",
     "mainframe-hook-codex": "./dist/hooks/codex/stop.js",

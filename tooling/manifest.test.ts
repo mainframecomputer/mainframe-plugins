@@ -64,23 +64,6 @@ const ClaudeManifestSchema = SharedManifestSchema.extend({
   hooks: z.literal("./hooks/claude/hooks.json"),
 }).strict();
 
-// The OpenClaw manifest is its own minimal contract (id + required configSchema
-// + cold metadata), not the shared host manifest: entrypoints and catalog copy
-// are deliberately absent because OpenClaw reads those from package.json.
-const OpenClawManifestSchema = z
-  .object({
-    id: z.literal("mainframe"),
-    name: z.literal("Mainframe"),
-    description: DescriptionSchema,
-    version: z.literal("0.1.0"),
-    skills: z.tuple([z.literal("./skills")]),
-    activation: z.object({ onStartup: z.literal(true) }).strict(),
-    configSchema: z
-      .object({ type: z.literal("object"), additionalProperties: z.literal(false) })
-      .strict(),
-  })
-  .strict();
-
 describe("generated plugin manifests", () => {
   it(".cursor-plugin/plugin.json matches the Cursor plugin schema", () => {
     const manifest = CursorManifestSchema.parse(
@@ -104,33 +87,6 @@ describe("generated plugin manifests", () => {
     );
 
     expect(manifest.hooks).toBe("./hooks/claude/hooks.json");
-  });
-
-  it("openclaw.plugin.json matches the OpenClaw plugin schema", () => {
-    const manifest = OpenClawManifestSchema.parse(
-      JSON.parse(readFileSync("openclaw.plugin.json", "utf8")),
-    );
-
-    expect(manifest.id).toBe("mainframe");
-    expect(manifest.configSchema.additionalProperties).toBe(false);
-  });
-
-  it("package.json declares the OpenClaw code-plugin publishing contract", () => {
-    const packageOpenClawSchema = z
-      .object({
-        openclaw: z
-          .object({
-            runtimeExtensions: z.tuple([z.literal("./dist/hooks/openclaw/register.js")]),
-            compat: z.object({ pluginApi: z.literal(">=2026.6.1") }).strict(),
-            build: z.object({ openclawVersion: z.literal("2026.6.1") }).strict(),
-          })
-          .strict(),
-      })
-      .passthrough();
-
-    const pkg = packageOpenClawSchema.parse(JSON.parse(readFileSync("package.json", "utf8")));
-
-    expect(pkg.openclaw.build.openclawVersion).toBe("2026.6.1");
   });
 
   it("Cursor marketplace metadata matches the Cursor marketplace schema", () => {

@@ -49,50 +49,34 @@ and Codex plugins.
 
 ### OpenClaw
 
-Install the Mainframe plugin from [ClawHub](https://clawhub.ai), the public skill and plugin
-registry for OpenClaw, with the OpenClaw plugin manager:
+OpenClaw consumes this package as a **bundle**: it reads the same `.cursor-plugin`,
+`.codex-plugin`, and `.claude-plugin` markers, the `./.mcp.json` wiring, and the `skills/`
+directory the other hosts already ship — no OpenClaw-specific manifest or code. Installing it
+auto-loads the `share-video` skill and connects the hosted Mainframe MCP server (which provides the
+`generate_video`, `upload_video`, and `get_video` tools), with no manual configuration:
 
 ```sh
-openclaw plugins install clawhub:mainframe
+openclaw plugins install mainframecomputer/mainframe-plugins
 ```
 
-The plugin gives OpenClaw the `share-video` skill and a native `before_agent_finalize` hook that
-suggests a short video after a long, unattended run — the same conservative AFK behavior as the
-other hosts' stop hooks, reusing the shared `hooks/core` runtime. Native OpenClaw plugins cannot
-register an MCP server for you, and conversation hooks need explicit access, so add the hosted
-Mainframe MCP server and hook access to your `openclaw.json`:
+OpenClaw bundles do not run agent-lifecycle hooks, so the conservative AFK "leave a video" stop hook
+is Cursor, Codex, and Claude Code only. On OpenClaw the `share-video` skill itself guides the agent
+on when a short video is worthwhile.
 
-```json
-{
-  "mcp": {
-    "servers": {
-      "mainframe": { "type": "http", "url": "https://mcp.mainframe.app/mcp" }
-    }
-  },
-  "plugins": {
-    "entries": {
-      "mainframe": { "hooks": { "allowConversationAccess": true } }
-    }
-  }
-}
-```
+#### Publishing the skill to ClawHub
 
-#### Publishing to ClawHub
-
-The canonical `share-video` skill is also published to ClawHub on its own, so any agent can install
-just the skill (its `generate_video`, `upload_video`, and `get_video` tools come from the hosted
-Mainframe MCP server, wired up separately):
+The canonical `share-video` skill is also published to [ClawHub](https://clawhub.ai), the public
+skill registry for OpenClaw, so any agent can install just the skill:
 
 ```sh
 clawhub install share-video
 ```
 
 Publishing is automated by [`.github/workflows/clawhub-publish.yml`](.github/workflows/clawhub-publish.yml),
-which reuses ClawHub's official `skill-publish` and `package-publish` reusable workflows instead of
-duplicating publish logic. Pull requests run dry-run previews, and a manual `workflow_dispatch` run
-publishes both the skill and the plugin package. A real publish needs a `CLAWHUB_TOKEN` repository
-secret and an `owner` handle (the package scope `@mainframe` must match that owner); publishing the
-skill to ClawHub releases it under `MIT-0`.
+which reuses ClawHub's official `skill-publish` reusable workflow instead of duplicating publish
+logic. Pull requests run a dry-run preview, and a manual `workflow_dispatch` run performs the real
+publish. A real publish needs a `CLAWHUB_TOKEN` repository secret and an `owner` handle; publishing
+the skill to ClawHub releases it under `MIT-0`.
 
 ## Included skill
 

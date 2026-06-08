@@ -1,26 +1,28 @@
 # Agent notes
 
-This repository packages the Mainframe Cursor, Codex, Claude Code, and OpenClaw plugins. Keep it
-focused on the Cursor, Codex, Claude Code, and OpenClaw manifests, hosted MCP wiring, the
-`share-video` skill, and the stop hooks.
+This repository packages the Mainframe Cursor, Codex, and Claude Code plugins. Keep it focused on
+the Cursor, Codex, and Claude Code manifests, hosted MCP wiring, the `share-video` skill, and the
+stop hooks. OpenClaw installs the same package as a bundle (reusing those host markers, the
+`./.mcp.json` wiring, and `skills/`), so it needs no OpenClaw-specific manifest or code.
 
 ## Repository boundaries
 
 - User-visible copy should say "Mainframe", not legacy product names.
 - Do not add secrets, customer data, private URLs, or private business context.
-- Cursor, Codex, Claude Code, and OpenClaw are the supported hosts. All plugins share the repo root,
+- Cursor, Codex, and Claude Code are the supported hosts. All three plugins share the repo root,
   the `share-video` skill, the `./.mcp.json` wiring, and the `hooks/core` runtime. Codex and Claude
   Code share the same Stop hook contract, so they both use `hooks/core/stop-hook.ts`; only the
-  transcript parser differs per host. OpenClaw is a native plugin host instead: it loads
-  `hooks/openclaw/register.ts` and maps the shared AFK gate onto the `before_agent_finalize`
-  lifecycle hook. Do not add other host surfaces unless the product task explicitly asks for them.
+  transcript parser differs per host. OpenClaw reuses these same bundle markers, MCP wiring, and
+  skill (auto-detected as a bundle), so it gets the skill and MCP without a separate manifest;
+  bundles do not run the stop hook. Do not add other host surfaces unless the product task
+  explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
-- Generated Cursor, Codex, Claude Code, and OpenClaw manifest and marketplace files come from
+- Generated Cursor, Codex, and Claude Code manifest and marketplace files come from
   `tooling/generate.ts`; edit the config there, then run `bun run generate`.
 - The canonical skill is `skills/share-video/SKILL.md`.
-- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`,
-  `.claude-plugin/`, and `openclaw.plugin.json`. Do not add package-local docs or extra top-level
-  markdown unless the user asks; improve `README.md` or this file instead.
+- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and
+  `.claude-plugin/`. Do not add package-local docs or extra top-level markdown unless the user
+  asks; improve `README.md` or this file instead.
 
 ## Start here
 

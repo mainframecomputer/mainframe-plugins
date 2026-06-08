@@ -18,7 +18,6 @@ const PackageSchema = z.object({
   name: z.string().min(1),
   version: z.string().min(1),
   files: z.array(z.string().min(1)).min(1),
-  openclaw: z.object({ runtimeExtensions: z.array(z.string().min(1)).min(1) }).passthrough(),
 });
 
 const PluginManifestSchema = z.object({
@@ -68,7 +67,6 @@ const manifestPaths = [
   claudeManifest.hooks,
   claudeManifest.mcpServers,
   claudeManifest.skills,
-  ...packageJson.openclaw.runtimeExtensions,
 ].map((path) => path.replace(/^\.\//, ""));
 
 assertPluginPackageSurface(packageJson.files);
