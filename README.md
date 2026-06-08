@@ -49,27 +49,24 @@ and Codex plugins.
 
 ### Hermes
 
-[Hermes](https://hermes-agent.nousresearch.com) is config-driven rather than manifest-based, so
-Mainframe for Hermes is the shared `share-video` skill plus the Mainframe MCP server. Both install
-through Hermes' own native flows — there is no plugin manifest to generate.
+Hermes installs Mainframe through its skill and config flows: install the `share-video` skill, then
+add the Mainframe MCP server.
 
-1. Install the `share-video` skill straight from this repository:
+1. Install the `share-video` skill:
 
    ```sh
    hermes skills install mainframecomputer/mainframe-plugins/skills/share-video
    ```
 
-   For local development you can instead point `skills.external_dirs` in `~/.hermes/config.yaml` at
-   this repository's `skills` directory.
+2. Add the Mainframe MCP server to `~/.hermes/config.yaml`:
 
-2. Add the Mainframe MCP server to `~/.hermes/config.yaml` by merging in the generated
-   `mcp_servers` block from `.hermes-plugin/config.yaml`. That fragment is generated from this
-   repo's `.mcp.json`, so it always carries the current Mainframe MCP endpoint.
+   ```yaml
+   mcp_servers:
+     mainframe:
+       url: https://mcp.mainframe.app/mcp
+   ```
 
-This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts. Hermes ships
-no stop hook: no Hermes stop event can re-engage the agent the way the other hosts' nudge does, so on
-Hermes the agent reaches for the `share-video` skill on its own, guided by the skill's own "use when"
-criteria.
+This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts.
 
 ## Included skill
 
