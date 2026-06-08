@@ -19,8 +19,7 @@
   "bin": {
     "mainframe-hook-claude": "./dist/hooks/claude/stop.js",
     "mainframe-hook-codex": "./dist/hooks/codex/stop.js",
-    "mainframe-hook-cursor": "./dist/hooks/cursor/stop.js",
-    "mainframe-hook-hermes": "./dist/hooks/hermes/stop.js"
+    "mainframe-hook-cursor": "./dist/hooks/cursor/stop.js"
   },
   "files": [
     ".agents",

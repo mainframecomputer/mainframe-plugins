@@ -3,7 +3,3 @@
 mcp_servers:
   mainframe:
     url: https://mcp.mainframe.app/mcp
-hooks:
-  pre_llm_call:
-    - command: mainframe-hook-hermes
-      timeout: 30

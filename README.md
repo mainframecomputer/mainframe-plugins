@@ -50,34 +50,19 @@ and Codex plugins.
 ### Hermes
 
 [Hermes](https://hermes-agent.nousresearch.com) is config-driven rather than manifest-based, so the
-Mainframe plugin for Hermes is wired through `~/.hermes/config.yaml` plus the shared skill. The
-generated fragment to merge in lives at `.hermes-plugin/config.yaml`.
+Mainframe plugin for Hermes is the shared `share-video` skill plus the Mainframe MCP server wired
+through `~/.hermes/config.yaml`. The generated MCP fragment to merge in lives at
+`.hermes-plugin/config.yaml`.
 
-1. Build this repository so the stop-hook runtime is available, and expose its `mainframe-hook-hermes`
-   command on your `PATH`:
-
-   ```sh
-   bun install && bun run build && bun link
-   ```
-
-   You can instead point the hook at the built script directly with
-   `node /absolute/path/to/dist/hooks/hermes/stop.js`.
-
-2. Merge the MCP server and the stop hook into `~/.hermes/config.yaml`:
+1. Add the Mainframe MCP server to `~/.hermes/config.yaml`:
 
    ```yaml
    mcp_servers:
      mainframe:
        url: https://mcp.mainframe.app/mcp
-   hooks:
-     pre_llm_call:
-       - command: mainframe-hook-hermes
-         timeout: 30
    ```
 
-   Hermes asks for consent the first time it runs a shell hook (or set `hooks_auto_accept: true`).
-
-3. Load the `share-video` skill by pointing Hermes at this repository's `skills` directory:
+2. Load the `share-video` skill by pointing Hermes at this repository's `skills` directory:
 
    ```yaml
    skills:
@@ -85,10 +70,10 @@ generated fragment to merge in lives at `.hermes-plugin/config.yaml`.
        - /absolute/path/to/mainframe-plugins/skills
    ```
 
-The Hermes stop hook runs on `pre_llm_call`, the one hook event whose output Hermes feeds back to
-the agent. Hermes hook payloads carry no timestamps, so there is no "away for N hours" timer like
-the other hosts; instead the hook nudges the agent toward the `share-video` skill at the start of a
-turn when the previous turn did real work and no Mainframe video has been shared yet.
+This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts. Hermes does
+not ship a stop hook: it has no hook event that fires when the agent stops and can re-engage it (the
+other hosts' nudge relies on that), so on Hermes the agent reaches for the `share-video` skill on
+its own, guided by the skill's own "use when" criteria.
 
 ## Included skill
 

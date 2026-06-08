@@ -173,24 +173,12 @@ describe("generated plugin manifests", () => {
 });
 
 describe("generated Hermes plugin config", () => {
-  it(".hermes-plugin/config.yaml wires the Mainframe MCP server and the pre_llm_call shell hook", () => {
+  it(".hermes-plugin/config.yaml wires the Mainframe MCP server", () => {
     const configSchema = z
       .object({
         mcp_servers: z
           .object({
             mainframe: z.object({ url: z.literal("https://mcp.mainframe.app/mcp") }).strict(),
-          })
-          .strict(),
-        hooks: z
-          .object({
-            pre_llm_call: z.tuple([
-              z
-                .object({
-                  command: z.literal("mainframe-hook-hermes"),
-                  timeout: z.literal(30),
-                })
-                .strict(),
-            ]),
           })
           .strict(),
       })
@@ -201,6 +189,5 @@ describe("generated Hermes plugin config", () => {
     );
 
     expect(config.mcp_servers.mainframe.url).toBe("https://mcp.mainframe.app/mcp");
-    expect(config.hooks.pre_llm_call[0].command).toBe("mainframe-hook-hermes");
   });
 });

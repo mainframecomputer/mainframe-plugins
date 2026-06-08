@@ -2,7 +2,6 @@ import { lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
-import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
 import { PACKAGE_FILES, SHIPPED_FILES, readPackageFiles } from "./package-surface.js";
@@ -41,23 +40,6 @@ const NestedStopHooksSchema = z
                 })
                 .passthrough(),
             ]),
-          })
-          .passthrough(),
-      ]),
-    }),
-  })
-  .passthrough();
-
-// Hermes shell hooks invoke a bare command resolved from PATH rather than a
-// `node "$PLUGIN_ROOT/..."` path, so the runtime is referenced by its package
-// bin name and resolved through `package.json`'s `bin` map.
-const HermesConfigSchema = z
-  .object({
-    hooks: z.object({
-      pre_llm_call: z.tuple([
-        z
-          .object({
-            command: z.string(),
           })
           .passthrough(),
       ]),
@@ -121,21 +103,6 @@ describe("package runtime surface", () => {
 
     expect(hookTarget).toBe("dist/hooks/claude/stop.js");
     expect(binTargets).toContain(hookTarget);
-    expect(isPackaged(hookTarget, packageJson.files)).toBe(true);
-    expect(statSync(hookTarget).mode & 0o111).not.toBe(0);
-  });
-
-  it("ships the executable Hermes hook runtime referenced by the config bin name", () => {
-    const packageJson = PackageSchema.parse(readJson("package.json"));
-    const config = HermesConfigSchema.parse(
-      parseYaml(readFileSync(".hermes-plugin/config.yaml", "utf8")),
-    );
-
-    const command = config.hooks.pre_llm_call[0].command;
-    const hookTarget = (packageJson.bin[command] ?? "").replace(/^\.\//, "");
-
-    expect(command).toBe("mainframe-hook-hermes");
-    expect(hookTarget).toBe("dist/hooks/hermes/stop.js");
     expect(isPackaged(hookTarget, packageJson.files)).toBe(true);
     expect(statSync(hookTarget).mode & 0o111).not.toBe(0);
   });
