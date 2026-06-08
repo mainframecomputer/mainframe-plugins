@@ -2,7 +2,7 @@
   "name": "@mainframe/plugins",
   "version": "0.1.0",
   "private": true,
-  "description": "Mainframe Cursor, Codex, Claude Code, and Hermes plugin manifests, skill, MCP wiring, and stop hooks.",
+  "description": "Mainframe Cursor, Codex, and Claude Code plugin manifests, skill, MCP wiring, and stop hooks.",
   "keywords": [
     "agent-skills",
     "hooks",
@@ -26,7 +26,6 @@
     ".claude-plugin",
     ".codex-plugin",
     ".cursor-plugin",
-    ".hermes-plugin",
     ".mcp.json",
     "LICENSE",
     "README.md",
@@ -42,9 +41,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && bun tooling/mark-executable.ts",
     "build:check": "bun run build && git diff --exit-code -- dist",
-    "generate": "bun tooling/generate.ts && oxfmt --write package.json .cursor-plugin .codex-plugin .agents .claude-plugin .hermes-plugin",
+    "generate": "bun tooling/generate.ts && oxfmt --write package.json .cursor-plugin .codex-plugin .agents .claude-plugin",
     "check:generated": "bun tooling/generated-drift-check.ts",
-    "archive:release": "bun run generate && bun run build && git diff --exit-code -- package.json .cursor-plugin .codex-plugin .agents .claude-plugin .hermes-plugin dist && bun tooling/release-archive.ts",
+    "archive:release": "bun run generate && bun run build && git diff --exit-code -- package.json .cursor-plugin .codex-plugin .agents .claude-plugin dist && bun tooling/release-archive.ts",
     "pack:release": "bun run verify && bun run archive:release",
     "lint": "oxlint . --deny-warnings --report-unused-disable-directives",
     "lint:fix": "oxlint . --fix",
@@ -64,7 +63,6 @@
     "oxlint-tsgolint": "^0.22.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.5",
-    "yaml": "^2.9.0",
     "zod": "^4.1.13"
   },
   "lint-staged": {

@@ -8,7 +8,6 @@ const generatedPaths = [
   ".agents/plugins/marketplace.json",
   ".claude-plugin/plugin.json",
   ".claude-plugin/marketplace.json",
-  ".hermes-plugin/config.yaml",
   "package.json",
 ];
 

@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
-import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
 const AuthorSchema = z
@@ -169,29 +168,5 @@ describe("generated plugin manifests", () => {
       .strict();
 
     marketplaceSchema.parse(JSON.parse(readFileSync(".claude-plugin/marketplace.json", "utf8")));
-  });
-});
-
-describe("generated Hermes plugin config", () => {
-  it("re-expresses every .mcp.json server for Hermes with the OAuth opt-in", () => {
-    const { mcpServers } = z
-      .object({ mcpServers: z.record(z.string(), z.object({ url: z.string() }).passthrough()) })
-      .parse(JSON.parse(readFileSync(".mcp.json", "utf8")));
-
-    const { mcp_servers } = z
-      .object({
-        mcp_servers: z.record(
-          z.string(),
-          z.object({ url: z.string(), auth: z.literal("oauth") }).passthrough(),
-        ),
-      })
-      .strict()
-      .parse(parseYaml(readFileSync(".hermes-plugin/config.yaml", "utf8")));
-
-    expect(Object.keys(mcp_servers)).toEqual(Object.keys(mcpServers));
-    for (const [name, server] of Object.entries(mcpServers)) {
-      expect(mcp_servers[name].url).toBe(server.url);
-      expect(mcp_servers[name].auth).toBe("oauth");
-    }
   });
 });

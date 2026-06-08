@@ -1,8 +1,8 @@
 # Agent notes
 
-This repository packages the Mainframe Cursor, Codex, Claude Code, and Hermes plugins. Keep it
-focused on the Cursor, Codex, Claude Code, and Hermes manifests, hosted MCP wiring, the
-`share-video` skill, and the stop hooks.
+This repository packages the Mainframe Cursor, Codex, and Claude Code plugins and documents Hermes
+setup. Keep it focused on the Cursor, Codex, and Claude Code manifests, hosted MCP wiring, the
+`share-video` skill, the stop hooks, and the Hermes setup docs in `README.md`.
 
 ## Repository boundaries
 
@@ -11,23 +11,22 @@ focused on the Cursor, Codex, Claude Code, and Hermes manifests, hosted MCP wiri
 - Cursor, Codex, Claude Code, and Hermes are the supported hosts. Cursor, Codex, and Claude Code
   share the repo root, the `share-video` skill, the `./.mcp.json` wiring, and the `hooks/core`
   stop-hook runtime. Codex and Claude Code share the same Stop hook contract, so they both use
-  `hooks/core/stop-hook.ts`; only the transcript parser differs per host. Hermes is config-driven
-  and ships only the `share-video` skill plus the MCP server, generated as a
-  `.hermes-plugin/config.yaml` fragment users merge into `~/.hermes/config.yaml`. The generated
-  `mcp_servers` entry sets `auth: oauth` because Hermes only runs the OAuth flow for a hosted MCP
-  server when the entry opts in (it does not auto-negotiate from a bare URL like the marketplace
-  hosts), so `tooling/generate.ts` adds it when re-expressing `./.mcp.json`. Hermes ships no
-  stop hook: no Hermes stop event's return value can re-engage the agent (`post_llm_call`,
-  `on_session_end`, and friends are observers; shell hooks — the `hooks/core` analog — only act on
-  `pre_tool_call` and a turn-start `pre_llm_call`), so there is nothing for the `hooks/core` runtime
-  to drive. Do not add other host surfaces unless the product task explicitly asks for them.
+  `hooks/core/stop-hook.ts`; only the transcript parser differs per host. Hermes is config-driven and
+  ships no generated manifest; its support lives in `README.md` — install the shared `share-video`
+  skill (`hermes skills install …`) and add the Mainframe MCP server to `~/.hermes/config.yaml` with
+  `auth: oauth` (Hermes only runs the OAuth flow for a hosted MCP server when the entry opts in; it
+  does not auto-negotiate from a bare URL like the marketplace hosts). Hermes ships no stop hook: no
+  Hermes stop event's return value can re-engage the agent (`post_llm_call`, `on_session_end`, and
+  friends are observers; shell hooks — the `hooks/core` analog — only act on `pre_tool_call` and a
+  turn-start `pre_llm_call`), so there is nothing for the `hooks/core` runtime to drive. Do not add
+  other host surfaces unless the product task explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
-- Generated Cursor, Codex, Claude Code, and Hermes manifest, marketplace, and config files come
-  from `tooling/generate.ts`; edit the config there, then run `bun run generate`.
+- Generated Cursor, Codex, and Claude Code manifest and marketplace files come from
+  `tooling/generate.ts`; edit the config there, then run `bun run generate`.
 - The canonical skill is `skills/share-video/SKILL.md`.
-- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`,
-  `.claude-plugin/`, and `.hermes-plugin/`. Do not add package-local docs or extra top-level
-  markdown unless the user asks; improve `README.md` or this file instead.
+- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and
+  `.claude-plugin/`. Do not add package-local docs or extra top-level markdown unless the user
+  asks; improve `README.md` or this file instead.
 
 ## Start here
 
