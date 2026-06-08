@@ -62,20 +62,14 @@ through Hermes' own native flows — there is no plugin manifest to generate.
    For local development you can instead point `skills.external_dirs` in `~/.hermes/config.yaml` at
    this repository's `skills` directory.
 
-2. Add the Mainframe MCP server to `~/.hermes/config.yaml`:
-
-   ```yaml
-   mcp_servers:
-     mainframe:
-       url: https://mcp.mainframe.app/mcp
-   ```
-
-   The same `mcp_servers` block is generated to `.hermes-plugin/config.yaml` for easy copy-paste.
+2. Add the Mainframe MCP server to `~/.hermes/config.yaml` by merging in the generated
+   `mcp_servers` block from `.hermes-plugin/config.yaml`. That fragment is generated from this
+   repo's `.mcp.json`, so it always carries the current Mainframe MCP endpoint.
 
 This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts. Hermes ships
-no stop hook: it has no hook event that fires when the agent stops and can re-engage it (the other
-hosts' nudge relies on that), so on Hermes the agent reaches for the `share-video` skill on its own,
-guided by the skill's own "use when" criteria.
+no stop hook: no Hermes stop event can re-engage the agent the way the other hosts' nudge does, so on
+Hermes the agent reaches for the `share-video` skill on its own, guided by the skill's own "use when"
+criteria.
 
 ## Included skill
 

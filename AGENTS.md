@@ -14,10 +14,10 @@ focused on the Cursor, Codex, Claude Code, and Hermes manifests, hosted MCP wiri
   `hooks/core/stop-hook.ts`; only the transcript parser differs per host. Hermes is config-driven
   and ships only the `share-video` skill plus the MCP server, generated as a
   `.hermes-plugin/config.yaml` fragment users merge into `~/.hermes/config.yaml`. Hermes ships no
-  stop hook: it has no hook event that fires when the agent stops and can re-engage it, so there is
-  nothing for the `hooks/core` runtime to drive (its only agent-facing hooks are `pre_tool_call`
-  and a turn-start `pre_llm_call`, neither of which is a stop). Do not add other host surfaces
-  unless the product task explicitly asks for them.
+  stop hook: no Hermes stop event's return value can re-engage the agent (`post_llm_call`,
+  `on_session_end`, and friends are observers; shell hooks — the `hooks/core` analog — only act on
+  `pre_tool_call` and a turn-start `pre_llm_call`), so there is nothing for the `hooks/core` runtime
+  to drive. Do not add other host surfaces unless the product task explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
 - Generated Cursor, Codex, Claude Code, and Hermes manifest, marketplace, and config files come
   from `tooling/generate.ts`; edit the config there, then run `bun run generate`.
