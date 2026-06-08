@@ -67,7 +67,7 @@ add the Mainframe MCP server.
        auth: oauth
    ```
 
-   On first use, Hermes opens your browser to authorize Mainframe.
+   On first use, Hermes opens your browser (or prints an authorize URL) to authorize Mainframe.
 
 This gives Hermes the same `share-video` skill and Mainframe tools as the other hosts.
 
