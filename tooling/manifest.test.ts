@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
 const AuthorSchema = z
@@ -168,5 +169,38 @@ describe("generated plugin manifests", () => {
       .strict();
 
     marketplaceSchema.parse(JSON.parse(readFileSync(".claude-plugin/marketplace.json", "utf8")));
+  });
+});
+
+describe("generated Hermes plugin config", () => {
+  it(".hermes-plugin/config.yaml wires the Mainframe MCP server and the pre_llm_call shell hook", () => {
+    const configSchema = z
+      .object({
+        mcp_servers: z
+          .object({
+            mainframe: z.object({ url: z.literal("https://mcp.mainframe.app/mcp") }).strict(),
+          })
+          .strict(),
+        hooks: z
+          .object({
+            pre_llm_call: z.tuple([
+              z
+                .object({
+                  command: z.literal("mainframe-hook-hermes"),
+                  timeout: z.literal(30),
+                })
+                .strict(),
+            ]),
+          })
+          .strict(),
+      })
+      .strict();
+
+    const config = configSchema.parse(
+      parseYaml(readFileSync(".hermes-plugin/config.yaml", "utf8")),
+    );
+
+    expect(config.mcp_servers.mainframe.url).toBe("https://mcp.mainframe.app/mcp");
+    expect(config.hooks.pre_llm_call[0].command).toBe("mainframe-hook-hermes");
   });
 });

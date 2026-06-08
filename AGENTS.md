@@ -1,25 +1,29 @@
 # Agent notes
 
-This repository packages the Mainframe Cursor, Codex, and Claude Code plugins. Keep it focused on
-the Cursor, Codex, and Claude Code manifests, hosted MCP wiring, the `share-video` skill, and the
-stop hooks.
+This repository packages the Mainframe Cursor, Codex, Claude Code, and Hermes plugins. Keep it
+focused on the Cursor, Codex, Claude Code, and Hermes manifests, hosted MCP wiring, the
+`share-video` skill, and the stop hooks.
 
 ## Repository boundaries
 
 - User-visible copy should say "Mainframe", not legacy product names.
 - Do not add secrets, customer data, private URLs, or private business context.
-- Cursor, Codex, and Claude Code are the supported hosts. All three plugins share the repo root,
-  the `share-video` skill, the `./.mcp.json` wiring, and the `hooks/core` runtime. Codex and Claude
-  Code share the same Stop hook contract, so they both use `hooks/core/stop-hook.ts`; only the
-  transcript parser differs per host. Do not add other host surfaces unless the product task
-  explicitly asks for them.
+- Cursor, Codex, Claude Code, and Hermes are the supported hosts. All four plugins share the repo
+  root, the `share-video` skill, the `./.mcp.json` wiring, and the `hooks/core` runtime. Codex and
+  Claude Code share the same Stop hook contract, so they both use `hooks/core/stop-hook.ts`; only
+  the transcript parser differs per host. Hermes is config-driven: its MCP server and stop hook
+  live in `~/.hermes/config.yaml`, so the plugin is a generated `.hermes-plugin/config.yaml`
+  fragment. The Hermes stop nudge is a `pre_llm_call` shell hook that reuses the `hooks/core` CLI
+  plumbing and share detection, but not the AFK time gate — Hermes hook payloads carry no
+  timestamps, so it nudges on unshared work instead of elapsed time. Do not add other host
+  surfaces unless the product task explicitly asks for them.
 - Run `bun run verify` before considering changes ready.
-- Generated Cursor, Codex, and Claude Code manifest and marketplace files come from
-  `tooling/generate.ts`; edit the config there, then run `bun run generate`.
+- Generated Cursor, Codex, Claude Code, and Hermes manifest, marketplace, and config files come
+  from `tooling/generate.ts`; edit the config there, then run `bun run generate`.
 - The canonical skill is `skills/share-video/SKILL.md`.
-- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and
-  `.claude-plugin/`. Do not add package-local docs or extra top-level markdown unless the user
-  asks; improve `README.md` or this file instead.
+- Keep generated metadata in `.cursor-plugin/`, `.codex-plugin/`, `.agents/plugins/`,
+  `.claude-plugin/`, and `.hermes-plugin/`. Do not add package-local docs or extra top-level
+  markdown unless the user asks; improve `README.md` or this file instead.
 
 ## Start here
 
